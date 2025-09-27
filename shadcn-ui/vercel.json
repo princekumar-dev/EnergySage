@@ -2,5 +2,10 @@
   "buildCommand": "npm run build:vite",
   "installCommand": "npm install --legacy-peer-deps",
   "devCommand": "npm run dev",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "functions": {
+    "app/**/*.{js,ts}": {
+      "runtime": "nodejs20.x"
+    }
+  }
 }
