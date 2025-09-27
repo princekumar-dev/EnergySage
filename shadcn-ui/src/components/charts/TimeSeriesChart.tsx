@@ -1,7 +1,9 @@
+import React, { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, AlertTriangle } from 'lucide-react';
 import { EnergyReading, Anomaly } from '@/lib/api';
+import { optimizeChartData, createTimestampLookup } from '@/lib/performance';
 
 interface TimeSeriesChartProps {
   data: EnergyReading[];
@@ -35,21 +37,48 @@ interface DotProps {
   payload: ChartDataPoint;
 }
 
-export default function TimeSeriesChart({ data, predictions, anomalies, mode }: TimeSeriesChartProps) {
-  // Combine actual data with predictions
-  const chartData: ChartDataPoint[] = [
-    ...data.map(d => ({
+export default React.memo(function TimeSeriesChart({ data, predictions, anomalies, mode }: TimeSeriesChartProps) {
+  // Handle empty data case
+  if (!data || data.length === 0) {
+    return (
+      <Card className="col-span-1 lg:col-span-2">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <TrendingUp className="h-5 w-5 text-blue-600" />
+            <span>Energy Consumption Trends</span>
+          </CardTitle>
+          <CardDescription>Real-time energy consumption patterns</CardDescription>
+        </CardHeader>
+        <CardContent className="h-64 flex items-center justify-center">
+          <div className="text-center text-gray-500">
+            <TrendingUp className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p className="font-medium">No consumption data available</p>
+            <p className="text-sm">Upload your energy data or load test data to view trends</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Optimize data for performance using utility functions
+  const optimizedData = useMemo(() => optimizeChartData(data, 200), [data]);
+  
+  // Memoize anomaly lookup for performance
+  const anomalyTimestamps = useMemo(() => createTimestampLookup(anomalies), [anomalies]);
+
+  // Combine actual data with predictions - memoized for performance
+  const chartData: ChartDataPoint[] = useMemo(() => {
+    const actualData = optimizedData.map(d => ({
       timestamp: new Date(d.timestamp).toLocaleDateString(),
       time: new Date(d.timestamp).getHours(),
       actual: d.kwh,
       predicted: null,
       upper: null,
       lower: null,
-      isAnomaly: anomalies?.some(a => 
-        new Date(a.timestamp).getTime() === new Date(d.timestamp).getTime()
-      ) || false
-    })),
-    ...(predictions || []).map(p => ({
+      isAnomaly: anomalyTimestamps.has(new Date(d.timestamp).getTime())
+    }));
+
+    const predictionData = (predictions || []).map(p => ({
       timestamp: new Date(p.timestamp).toLocaleDateString(),
       time: new Date(p.timestamp).getHours(),
       actual: null,
@@ -57,14 +86,17 @@ export default function TimeSeriesChart({ data, predictions, anomalies, mode }: 
       upper: p.confidence_interval[1],
       lower: p.confidence_interval[0],
       isAnomaly: false
-    }))
-  ].sort((a, b) => a.time - b.time);
+    }));
 
-  const maxValue = Math.max(
-    ...chartData.map(d => Math.max(d.actual || 0, d.predicted || 0, d.upper || 0))
+    return [...actualData, ...predictionData].sort((a, b) => a.time - b.time);
+  }, [optimizedData, predictions, anomalyTimestamps]);
+
+  const maxValue = useMemo(() => 
+    Math.max(...chartData.map(d => Math.max(d.actual || 0, d.predicted || 0, d.upper || 0))),
+    [chartData]
   );
 
-  const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
+  const CustomTooltip = React.useCallback(({ active, payload, label }: TooltipProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -90,12 +122,14 @@ export default function TimeSeriesChart({ data, predictions, anomalies, mode }: 
       );
     }
     return null;
-  };
+  }, []);
 
-  const anomalyCount = anomalies?.length || 0;
-  const avgConsumption = data.length > 0 
-    ? data.reduce((sum, d) => sum + d.kwh, 0) / data.length 
-    : 0;
+  const { anomalyCount, avgConsumption } = useMemo(() => ({
+    anomalyCount: anomalies?.length || 0,
+    avgConsumption: optimizedData.length > 0 
+      ? optimizedData.reduce((sum, d) => sum + d.kwh, 0) / optimizedData.length 
+      : 0
+  }), [anomalies, optimizedData]);
 
   return (
     <Card className="col-span-2 shadow-lg border-0">
@@ -236,4 +270,4 @@ export default function TimeSeriesChart({ data, predictions, anomalies, mode }: 
       </CardContent>
     </Card>
   );
-}
+});

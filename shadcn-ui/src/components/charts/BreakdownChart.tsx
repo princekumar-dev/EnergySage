@@ -1,8 +1,10 @@
+import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PieChart as PieChartIcon, BarChart3 } from 'lucide-react';
+import { PieChart as PieChartIcon, BarChart3, Activity } from 'lucide-react';
 import { EnergyReading } from '@/lib/api';
+import { aggregateByDevice } from '@/lib/performance';
 
 interface BreakdownChartProps {
   data: EnergyReading[];
@@ -23,34 +25,47 @@ interface TooltipProps {
   }>;
 }
 
-export default function BreakdownChart({ data, mode }: BreakdownChartProps) {
-  // Aggregate data by device/machine
-  const deviceData = data.reduce((acc, reading) => {
-    const key = mode === 'household' ? reading.device : (reading.machine_id || reading.device);
-    if (!acc[key]) {
-      acc[key] = 0;
-    }
-    acc[key] += reading.kwh;
-    return acc;
-  }, {} as Record<string, number>);
+export default React.memo(function BreakdownChart({ data, mode }: BreakdownChartProps) {
+  // Handle empty data case
+  if (!data || data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Activity className="h-5 w-5 text-green-600" />
+            <span>Energy Breakdown</span>
+          </CardTitle>
+          <CardDescription>Top energy consumers by {mode === 'household' ? 'appliance' : 'machine'}</CardDescription>
+        </CardHeader>
+        <CardContent className="h-64 flex items-center justify-center">
+          <div className="text-center text-gray-500">
+            <Activity className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p className="font-medium">No breakdown data available</p>
+            <p className="text-sm">Upload your energy data to see consumption breakdown</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  // Convert to chart format and sort by consumption
-  const chartData: ChartDataItem[] = Object.entries(deviceData)
-    .map(([device, kwh]) => ({
-      device,
-      kwh: Number(kwh.toFixed(2)),
-      percentage: Number(((kwh / Object.values(deviceData).reduce((a, b) => a + b, 0)) * 100).toFixed(1))
-    }))
-    .sort((a, b) => b.kwh - a.kwh)
-    .slice(0, 10); // Top 10 consumers
+  // Memoize data processing for performance using utility functions
+  const chartData: ChartDataItem[] = useMemo(() => {
+    const aggregatedData = aggregateByDevice(data, mode, 10);
+    const totalConsumption = aggregatedData.reduce((sum, item) => sum + item.kwh, 0);
+    
+    return aggregatedData.map(item => ({
+      ...item,
+      percentage: Number(((item.kwh / totalConsumption) * 100).toFixed(1))
+    }));
+  }, [data, mode]);
 
-  // Color palette
-  const colors = [
+  // Color palette - memoized for performance
+  const colors = useMemo(() => [
     '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
     '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6366f1'
-  ];
+  ], []);
 
-  const CustomTooltip = ({ active, payload }: TooltipProps) => {
+  const CustomTooltip = React.useCallback(({ active, payload }: TooltipProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -61,10 +76,12 @@ export default function BreakdownChart({ data, mode }: BreakdownChartProps) {
       );
     }
     return null;
-  };
+  }, []);
 
-  const totalConsumption = chartData.reduce((sum, item) => sum + item.kwh, 0);
-  const topConsumer = chartData[0];
+  const { totalConsumption, topConsumer } = useMemo(() => ({
+    totalConsumption: chartData.reduce((sum, item) => sum + item.kwh, 0),
+    topConsumer: chartData[0]
+  }), [chartData]);
 
   return (
     <Card className="shadow-lg border-0">
@@ -168,4 +185,4 @@ export default function BreakdownChart({ data, mode }: BreakdownChartProps) {
       </CardContent>
     </Card>
   );
-}
+});
