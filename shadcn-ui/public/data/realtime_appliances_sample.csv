@@ -1,0 +1,176 @@
+name,type,brand,model,rated_power,energy_efficiency_rating,age_years,usage_hours_per_day,location
+Living Room AC,air_conditioner,LG,Dual Inverter 1.5T,1500,A++,3,8,Living Room
+Bedroom AC,air_conditioner,Samsung,WindFree 1T,1200,A+,2,10,Bedroom
+Guest Room AC,air_conditioner,Voltas,Inverter 1T,1000,A,4,4,Guest Room
+Refrigerator,refrigerator,Whirlpool,300L Frost Free,150,A++,4,24,Kitchen
+Water Heater,water_heater,Bajaj,Instant 15L,2000,B+,5,3,Bathroom
+Washing Machine,washing_machine,IFB,Top Load 7kg,500,A+,3,1.5,Utility Room
+Dishwasher,dishwasher,Bosch,12 Place Setting,1800,A++,2,1,Kitchen
+LED TV 55",television,Sony,Bravia 4K OLED,120,A+,2,6,Living Room
+LED TV 32",television,Samsung,HD Smart TV,80,A,3,4,Bedroom
+Microwave Oven,microwave,Panasonic,23L Convection,800,B,4,0.5,Kitchen
+Induction Cooktop,cooktop,Prestige,2000W Double,2000,A,3,2,Kitchen
+Ceiling Fans (4),fan,Crompton,Super Briz Deco 48",280,A,5,14,All Rooms
+Table Fans (2),fan,Havells,Swing DX 400mm,100,A+,2,6,Study/Bedroom
+LED Lights (20),lighting,Philips,9W LED Bulbs,180,A++,1,8,All Rooms
+Tube Lights (8),lighting,Bajaj,20W LED Batten,160,A+,2,6,Kitchen/Bathrooms
+Laptop Chargers (2),electronics,Dell/HP,65W Adapters,130,A,2,10,Study/Bedroom
+Desktop Computer,electronics,Dell,OptiPlex 3080,200,A+,1,8,Study Room
+WiFi Router,electronics,TP-Link,Archer C6 AC1200,12,A+,2,24,Living Room
+Printer,electronics,Canon,Pixma G3010,15,A,3,2,Study Room
+Iron Box,appliance,Philips,Dry Iron 1000W,1000,B+,6,0.5,Utility Room
+Vacuum Cleaner,appliance,Eureka Forbes,Trendy Zip 1000W,1000,B,4,0.25,All Rooms
+Hair Dryer,appliance,Philips,BHD006 1600W,1600,B,2,0.2,Bathroom
+Water Purifier,appliance,Kent,Grand Plus RO+UV,60,A+,3,24,Kitchen
+Inverter AC (Study),air_conditioner,Daikin,1.5T 5-Star,1400,A+++,1,6,Study Room
+Geyser (Guest Bathroom),water_heater,Racold,25L Storage,2000,A+,4,2,Guest Bathroom
+Living Room AC,air_conditioner,LG,Dual Inverter 1.5T,1500,A++,2,7,Living Room
+Bedroom AC,air_conditioner,Samsung,WindFree 1T,1200,A+,1,9,Bedroom
+Guest Room AC,air_conditioner,Voltas,Inverter 1T,1000,A,3,3,Guest Room
+Refrigerator,refrigerator,Whirlpool,300L Frost Free,150,A++,2,24,Kitchen
+Water Heater,water_heater,Bajaj,Instant 15L,2000,B+,3,2,Bathroom
+Washing Machine,washing_machine,IFB,Top Load 7kg,500,A+,2,1,Utility Room
+Dishwasher,dishwasher,Bosch,12 Place Setting,1800,A++,1,1,Kitchen
+LED TV 55",television,Sony,Bravia 4K OLED,120,A+,1,5,Living Room
+LED TV 32",television,Samsung,HD Smart TV,80,A,2,3,Bedroom
+Microwave Oven,microwave,Panasonic,23L Convection,800,B,2,0.5,Kitchen
+Induction Cooktop,cooktop,Prestige,2000W Double,2000,A,2,1,Kitchen
+Ceiling Fans (4),fan,Crompton,Super Briz Deco 48",280,A,3,13,All Rooms
+Table Fans (2),fan,Havells,Swing DX 400mm,100,A+,1,5,Study/Bedroom
+LED Lights (20),lighting,Philips,9W LED Bulbs,180,A++,1,7,All Rooms
+Tube Lights (8),lighting,Bajaj,20W LED Batten,160,A+,1,5,Kitchen/Bathrooms
+Laptop Chargers (2),electronics,Dell/HP,65W Adapters,130,A,1,9,Study/Bedroom
+Desktop Computer,electronics,Dell,OptiPlex 3080,200,A+,1,7,Study Room
+WiFi Router,electronics,TP-Link,Archer C6 AC1200,12,A+,1,24,Living Room
+Printer,electronics,Canon,Pixma G3010,15,A,2,2,Study Room
+Iron Box,appliance,Philips,Dry Iron 1000W,1000,B+,4,0.5,Utility Room
+Vacuum Cleaner,appliance,Eureka Forbes,Trendy Zip 1000W,1000,B,2,0.25,All Rooms
+Hair Dryer,appliance,Philips,BHD006 1600W,1600,B,1,0.2,Bathroom
+Water Purifier,appliance,Kent,Grand Plus RO+UV,60,A+,2,24,Kitchen
+Inverter AC (Study),air_conditioner,Daikin,1.5T 5-Star,1400,A+++,1,5,Study Room
+Geyser (Guest Bathroom),water_heater,Racold,25L Storage,2000,A+,2,2,Guest Bathroom
+Living Room AC,air_conditioner,LG,Dual Inverter 1.5T,1500,A++,4,8,Living Room
+Bedroom AC,air_conditioner,Samsung,WindFree 1T,1200,A+,3,10,Bedroom
+Guest Room AC,air_conditioner,Voltas,Inverter 1T,1000,A,5,4,Guest Room
+Refrigerator,refrigerator,Whirlpool,300L Frost Free,150,A++,5,24,Kitchen
+Water Heater,water_heater,Bajaj,Instant 15L,2000,B+,6,3,Bathroom
+Washing Machine,washing_machine,IFB,Top Load 7kg,500,A+,5,1.5,Utility Room
+Dishwasher,dishwasher,Bosch,12 Place Setting,1800,A++,4,1,Kitchen
+LED TV 55",television,Sony,Bravia 4K OLED,120,A+,4,6,Living Room
+LED TV 32",television,Samsung,HD Smart TV,80,A,5,4,Bedroom
+Microwave Oven,microwave,Panasonic,23L Convection,800,B,5,0.5,Kitchen
+Induction Cooktop,cooktop,Prestige,2000W Double,2000,A,5,2,Kitchen
+Ceiling Fans (4),fan,Crompton,Super Briz Deco 48",280,A,6,14,All Rooms
+Table Fans (2),fan,Havells,Swing DX 400mm,100,A+,5,6,Study/Bedroom
+LED Lights (20),lighting,Philips,9W LED Bulbs,180,A++,4,8,All Rooms
+Tube Lights (8),lighting,Bajaj,20W LED Batten,160,A+,5,6,Kitchen/Bathrooms
+Laptop Chargers (2),electronics,Dell/HP,65W Adapters,130,A,5,10,Study/Bedroom
+Desktop Computer,electronics,Dell,OptiPlex 3080,200,A+,4,8,Study Room
+WiFi Router,electronics,TP-Link,Archer C6 AC1200,12,A+,5,24,Living Room
+Printer,electronics,Canon,Pixma G3010,15,A,5,2,Study Room
+Iron Box,appliance,Philips,Dry Iron 1000W,1000,B+,6,0.5,Utility Room
+Vacuum Cleaner,appliance,Eureka Forbes,Trendy Zip 1000W,1000,B,5,0.25,All Rooms
+Hair Dryer,appliance,Philips,BHD006 1600W,1600,B,4,0.2,Bathroom
+Water Purifier,appliance,Kent,Grand Plus RO+UV,60,A+,5,24,Kitchen
+Inverter AC (Study),air_conditioner,Daikin,1.5T 5-Star,1400,A+++,4,6,Study Room
+Geyser (Guest Bathroom),water_heater,Racold,25L Storage,2000,A+,5,2,Guest Bathroom
+Living Room AC,air_conditioner,LG,Dual Inverter 1.5T,1500,A++,2,8,Living Room
+Bedroom AC,air_conditioner,Samsung,WindFree 1T,1200,A+,2,10,Bedroom
+Guest Room AC,air_conditioner,Voltas,Inverter 1T,1000,A,2,4,Guest Room
+Refrigerator,refrigerator,Whirlpool,300L Frost Free,150,A++,2,24,Kitchen
+Water Heater,water_heater,Bajaj,Instant 15L,2000,B+,2,3,Bathroom
+Washing Machine,washing_machine,IFB,Top Load 7kg,500,A+,2,1.5,Utility Room
+Dishwasher,dishwasher,Bosch,12 Place Setting,1800,A++,2,1,Kitchen
+LED TV 55",television,Sony,Bravia 4K OLED,120,A+,2,6,Living Room
+LED TV 32",television,Samsung,HD Smart TV,80,A,2,4,Bedroom
+Microwave Oven,microwave,Panasonic,23L Convection,800,B,2,0.5,Kitchen
+Induction Cooktop,cooktop,Prestige,2000W Double,2000,A,2,2,Kitchen
+Ceiling Fans (4),fan,Crompton,Super Briz Deco 48",280,A,2,14,All Rooms
+Table Fans (2),fan,Havells,Swing DX 400mm,100,A+,2,6,Study/Bedroom
+LED Lights (20),lighting,Philips,9W LED Bulbs,180,A++,2,8,All Rooms
+Tube Lights (8),lighting,Bajaj,20W LED Batten,160,A+,2,6,Kitchen/Bathrooms
+Laptop Chargers (2),electronics,Dell/HP,65W Adapters,130,A,2,10,Study/Bedroom
+Desktop Computer,electronics,Dell,OptiPlex 3080,200,A+,2,8,Study Room
+WiFi Router,electronics,TP-Link,Archer C6 AC1200,12,A+,2,24,Living Room
+Printer,electronics,Canon,Pixma G3010,15,A,2,2,Study Room
+Iron Box,appliance,Philips,Dry Iron 1000W,1000,B+,2,0.5,Utility Room
+Vacuum Cleaner,appliance,Eureka Forbes,Trendy Zip 1000W,1000,B,2,0.25,All Rooms
+Hair Dryer,appliance,Philips,BHD006 1600W,1600,B,2,0.2,Bathroom
+Water Purifier,appliance,Kent,Grand Plus RO+UV,60,A+,2,24,Kitchen
+Inverter AC (Study),air_conditioner,Daikin,1.5T 5-Star,1400,A+++,2,6,Study Room
+Geyser (Guest Bathroom),water_heater,Racold,25L Storage,2000,A+,2,2,Guest Bathroom
+Living Room AC,air_conditioner,LG,Dual Inverter 1.5T,1500,A++,1,8,Living Room
+Bedroom AC,air_conditioner,Samsung,WindFree 1T,1200,A+,1,10,Bedroom
+Guest Room AC,air_conditioner,Voltas,Inverter 1T,1000,A,1,4,Guest Room
+Refrigerator,refrigerator,Whirlpool,300L Frost Free,150,A++,1,24,Kitchen
+Water Heater,water_heater,Bajaj,Instant 15L,2000,B+,1,3,Bathroom
+Washing Machine,washing_machine,IFB,Top Load 7kg,500,A+,1,1.5,Utility Room
+Dishwasher,dishwasher,Bosch,12 Place Setting,1800,A++,1,1,Kitchen
+LED TV 55",television,Sony,Bravia 4K OLED,120,A+,1,6,Living Room
+LED TV 32",television,Samsung,HD Smart TV,80,A,1,4,Bedroom
+Microwave Oven,microwave,Panasonic,23L Convection,800,B,1,0.5,Kitchen
+Induction Cooktop,cooktop,Prestige,2000W Double,2000,A,1,2,Kitchen
+Ceiling Fans (4),fan,Crompton,Super Briz Deco 48",280,A,1,14,All Rooms
+Table Fans (2),fan,Havells,Swing DX 400mm,100,A+,1,6,Study/Bedroom
+LED Lights (20),lighting,Philips,9W LED Bulbs,180,A++,1,8,All Rooms
+Tube Lights (8),lighting,Bajaj,20W LED Batten,160,A+,1,6,Kitchen/Bathrooms
+Laptop Chargers (2),electronics,Dell/HP,65W Adapters,130,A,1,10,Study/Bedroom
+Desktop Computer,electronics,Dell,OptiPlex 3080,200,A+,1,8,Study Room
+WiFi Router,electronics,TP-Link,Archer C6 AC1200,12,A+,1,24,Living Room
+Printer,electronics,Canon,Pixma G3010,15,A,1,2,Study Room
+Iron Box,appliance,Philips,Dry Iron 1000W,1000,B+,1,0.5,Utility Room
+Vacuum Cleaner,appliance,Eureka Forbes,Trendy Zip 1000W,1000,B,1,0.25,All Rooms
+Hair Dryer,appliance,Philips,BHD006 1600W,1600,B,1,0.2,Bathroom
+Water Purifier,appliance,Kent,Grand Plus RO+UV,60,A+,1,24,Kitchen
+Inverter AC (Study),air_conditioner,Daikin,1.5T 5-Star,1400,A+++,1,6,Study Room
+Geyser (Guest Bathroom),water_heater,Racold,25L Storage,2000,A+,1,2,Guest Bathroom
+Living Room AC,air_conditioner,LG,Dual Inverter 1.5T,1500,A++,6,8,Living Room
+Bedroom AC,air_conditioner,Samsung,WindFree 1T,1200,A+,6,10,Bedroom
+Guest Room AC,air_conditioner,Voltas,Inverter 1T,1000,A,6,4,Guest Room
+Refrigerator,refrigerator,Whirlpool,300L Frost Free,150,A++,6,24,Kitchen
+Water Heater,water_heater,Bajaj,Instant 15L,2000,B+,6,3,Bathroom
+Washing Machine,washing_machine,IFB,Top Load 7kg,500,A+,6,1.5,Utility Room
+Dishwasher,dishwasher,Bosch,12 Place Setting,1800,A++,6,1,Kitchen
+LED TV 55",television,Sony,Bravia 4K OLED,120,A+,6,6,Living Room
+LED TV 32",television,Samsung,HD Smart TV,80,A,6,4,Bedroom
+Microwave Oven,microwave,Panasonic,23L Convection,800,B,6,0.5,Kitchen
+Induction Cooktop,cooktop,Prestige,2000W Double,2000,A,6,2,Kitchen
+Ceiling Fans (4),fan,Crompton,Super Briz Deco 48",280,A,6,14,All Rooms
+Table Fans (2),fan,Havells,Swing DX 400mm,100,A+,6,6,Study/Bedroom
+LED Lights (20),lighting,Philips,9W LED Bulbs,180,A++,6,8,All Rooms
+Tube Lights (8),lighting,Bajaj,20W LED Batten,160,A+,6,6,Kitchen/Bathrooms
+Laptop Chargers (2),electronics,Dell/HP,65W Adapters,130,A,6,10,Study/Bedroom
+Desktop Computer,electronics,Dell,OptiPlex 3080,200,A+,6,8,Study Room
+WiFi Router,electronics,TP-Link,Archer C6 AC1200,12,A+,6,24,Living Room
+Printer,electronics,Canon,Pixma G3010,15,A,6,2,Study Room
+Iron Box,appliance,Philips,Dry Iron 1000W,1000,B+,6,0.5,Utility Room
+Vacuum Cleaner,appliance,Eureka Forbes,Trendy Zip 1000W,1000,B,6,0.25,All Rooms
+Hair Dryer,appliance,Philips,BHD006 1600W,1600,B,6,0.2,Bathroom
+Water Purifier,appliance,Kent,Grand Plus RO+UV,60,A+,6,24,Kitchen
+Inverter AC (Study),air_conditioner,Daikin,1.5T 5-Star,1400,A+++,6,6,Study Room
+Geyser (Guest Bathroom),water_heater,Racold,25L Storage,2000,A+,6,2,Guest Bathroom
+Living Room AC,air_conditioner,LG,Dual Inverter 1.5T,1500,A++,7,8,Living Room
+Bedroom AC,air_conditioner,Samsung,WindFree 1T,1200,A+,7,10,Bedroom
+Guest Room AC,air_conditioner,Voltas,Inverter 1T,1000,A,7,4,Guest Room
+Refrigerator,refrigerator,Whirlpool,300L Frost Free,150,A++,7,24,Kitchen
+Water Heater,water_heater,Bajaj,Instant 15L,2000,B+,7,3,Bathroom
+Washing Machine,washing_machine,IFB,Top Load 7kg,500,A+,7,1.5,Utility Room
+Dishwasher,dishwasher,Bosch,12 Place Setting,1800,A++,7,1,Kitchen
+LED TV 55",television,Sony,Bravia 4K OLED,120,A+,7,6,Living Room
+LED TV 32",television,Samsung,HD Smart TV,80,A,7,4,Bedroom
+Microwave Oven,microwave,Panasonic,23L Convection,800,B,7,0.5,Kitchen
+Induction Cooktop,cooktop,Prestige,2000W Double,2000,A,7,2,Kitchen
+Ceiling Fans (4),fan,Crompton,Super Briz Deco 48",280,A,7,14,All Rooms
+Table Fans (2),fan,Havells,Swing DX 400mm,100,A+,7,6,Study/Bedroom
+LED Lights (20),lighting,Philips,9W LED Bulbs,180,A++,7,8,All Rooms
+Tube Lights (8),lighting,Bajaj,20W LED Batten,160,A+,7,6,Kitchen/Bathrooms
+Laptop Chargers (2),electronics,Dell/HP,65W Adapters,130,A,7,10,Study/Bedroom
+Desktop Computer,electronics,Dell,OptiPlex 3080,200,A+,7,8,Study Room
+WiFi Router,electronics,TP-Link,Archer C6 AC1200,12,A+,7,24,Living Room
+Printer,electronics,Canon,Pixma G3010,15,A,7,2,Study Room
+Iron Box,appliance,Philips,Dry Iron 1000W,1000,B+,7,0.5,Utility Room
+Vacuum Cleaner,appliance,Eureka Forbes,Trendy Zip 1000W,1000,B,7,0.25,All Rooms
+Hair Dryer,appliance,Philips,BHD006 1600W,1600,B,7,0.2,Bathroom
+Water Purifier,appliance,Kent,Grand Plus RO+UV,60,A+,7,24,Kitchen
+Inverter AC (Study),air_conditioner,Daikin,1.5T 5-Star,1400,A+++,7,6,Study Room
+Geyser (Guest Bathroom),water_heater,Racold,25L Storage,2000,A+,7,2,Guest Bathroom
