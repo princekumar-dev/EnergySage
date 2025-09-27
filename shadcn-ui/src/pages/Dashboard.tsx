@@ -18,7 +18,10 @@ import {
   Factory,
   AlertTriangle,
   Calendar,
-  CheckCircle
+  CheckCircle,
+  Loader2,
+  Activity,
+  TestTube2
 } from 'lucide-react';
 
 import FileUpload from '@/components/FileUpload';
@@ -31,8 +34,11 @@ import SmartAlerts from '@/components/SmartAlerts';
 import PredictiveMaintenanceCard from '@/components/PredictiveMaintenanceCard';
 import BenchmarkCard from '@/components/BenchmarkCard';
 import ApplianceImport from '@/components/ApplianceImport';
+import TimeBasedAnalysis from '@/components/TimeBasedAnalysis';
+import GridAwareness from '@/components/GridAwareness';
+import GridNotifications from '@/components/GridNotifications';
 
-import { api, EnergyReading, Prediction, Anomaly, Recommendation, CostData, User, ImportedApplianceData } from '@/lib/api';
+import { api, EnergyReading, Prediction, Anomaly, Recommendation, CostData, User, ImportedApplianceData, testAllApiFunctions, SimulationWebSocket } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 
 export default function Dashboard() {
@@ -47,56 +53,83 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedLocation, setSelectedLocation] = useState('US');
   const [forecastHorizon, setForecastHorizon] = useState(7);
+  
+  // Persistent simulation state
+  const [simulationRunning, setSimulationRunning] = useState(false);
+  const [simulationConnected, setSimulationConnected] = useState(false);
+  const [simulationDataCount, setSimulationDataCount] = useState(0);
+  const [lastSimulationData, setLastSimulationData] = useState<EnergyReading | null>(null);
+  const [simulationWs, setSimulationWs] = useState<any>(null);
 
   useEffect(() => {
     // Load user data
     const userData = localStorage.getItem('energySageUser');
     if (userData) {
-      setUser(JSON.parse(userData));
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
     } else {
       navigate('/auth');
       return;
     }
-
-    // Load initial data
-    loadDashboardData();
   }, [navigate]);
 
+  useEffect(() => {
+    // Load initial data when user is available
+    if (user) {
+      loadDashboardData();
+    }
+  }, [user, selectedLocation, forecastHorizon]);
+
   const loadDashboardData = async () => {
+    if (!user) return;
+    
     setLoading(true);
     try {
       const now = new Date();
-      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       
-      // Load time series data
+      console.log('🔄 Loading dashboard data...', { user: user.mode, location: selectedLocation });
+      
+      // Load time series data with extended range for better insights
       const timeSeries = await api.getTimeSeries(
-        yesterday.toISOString(),
+        sevenDaysAgo.toISOString(),
         now.toISOString(),
-        user?.mode || 'household'
+        user.mode || 'household'
       );
       setTimeSeriesData(timeSeries);
+      console.log('📊 Time series loaded:', timeSeries.length, 'readings');
 
       // Load predictions
       const predictions = await api.getPredictions(forecastHorizon);
       setPredictions(predictions);
+      console.log('🔮 Predictions loaded:', predictions.length, 'forecasts');
 
       // Load anomalies
       const anomalies = await api.getAnomalies(
-        yesterday.toISOString(),
+        sevenDaysAgo.toISOString(),
         now.toISOString()
       );
       setAnomalies(anomalies);
+      console.log('⚠️ Anomalies loaded:', anomalies.length, 'detected');
 
       // Load recommendations with location for accurate pricing
       const recommendations = await api.getRecommendations(selectedLocation);
       setRecommendations(recommendations);
+      console.log('💡 Recommendations loaded:', recommendations.length, 'suggestions');
 
       // Load cost data
       const costData = await api.getCostData(selectedLocation);
       setCostData(costData);
+      console.log('💰 Cost data loaded for', selectedLocation);
+
+      // Check if we have appliances imported
+      const importedAppliances = await api.getImportedAppliances();
+      setAppliancesImported(importedAppliances.length > 0);
+      console.log('🏠 Appliances imported:', importedAppliances.length, 'devices');
 
     } catch (error) {
-      console.error('Failed to load dashboard data:', error);
+      console.error('❌ Failed to load dashboard data:', error);
+      // Don't throw the error to prevent UI crashes
     } finally {
       setLoading(false);
     }
@@ -108,8 +141,68 @@ export default function Dashboard() {
   };
 
   const handleSimulationData = (data: EnergyReading) => {
-    setTimeSeriesData(prev => [...prev.slice(-100), data]); // Keep last 100 points
+    setTimeSeriesData(prev => {
+      const newData = [...prev, data];
+      // Keep last 200 points for optimal performance
+      return newData.length > 200 ? newData.slice(-200) : newData;
+    });
+    setLastSimulationData(data);
+    setSimulationDataCount(prev => prev + 1);
   };
+
+  // Persistent simulation controls
+  const startPersistentSimulation = async () => {
+    try {
+      console.log('🚀 Starting persistent simulation...');
+      await api.startSimulation();
+      
+      // Create WebSocket connection that persists across tab changes
+      const websocket = new SimulationWebSocket();
+      websocket.onData((data: EnergyReading) => {
+        handleSimulationData(data);
+      });
+      
+      websocket.connect();
+      setSimulationWs(websocket);
+      setSimulationRunning(true);
+      setSimulationConnected(true);
+      
+      console.log('✅ Persistent simulation started successfully');
+    } catch (error) {
+      console.error('❌ Failed to start persistent simulation:', error);
+    }
+  };
+
+  const stopPersistentSimulation = async () => {
+    try {
+      console.log('⏹️ Stopping persistent simulation...');
+      await api.stopSimulation();
+      
+      // Ensure WebSocket is properly disconnected
+      if (simulationWs) {
+        simulationWs.disconnect();
+        setSimulationWs(null);
+      }
+      
+      // Reset simulation state
+      setSimulationRunning(false);
+      setSimulationConnected(false);
+      
+      console.log('✅ Persistent simulation stopped successfully');
+    } catch (error) {
+      console.error('❌ Failed to stop persistent simulation:', error);
+    }
+  };
+
+  // Cleanup simulation on component unmount
+  useEffect(() => {
+    return () => {
+      if (simulationWs) {
+        console.log('🧹 Cleaning up persistent simulation on Dashboard unmount...');
+        simulationWs.disconnect();
+      }
+    };
+  }, [simulationWs]);
 
   const handleLocationChange = async (location: string) => {
     setSelectedLocation(location);
@@ -138,6 +231,30 @@ export default function Dashboard() {
     }
   };
 
+  const handleLoadTestData = async () => {
+    try {
+      setLoading(true);
+      console.log('🔄 Loading comprehensive test data...');
+      
+      // Load the real-time test data
+      const testData = await api.getRealtimeTestData();
+      console.log('✅ Test data loaded:', testData.message);
+      
+      // Test all API functions
+      const testResult = await testAllApiFunctions();
+      if (testResult.success) {
+        console.log('🎉 All functions working properly:', testResult.summary);
+      }
+      
+      // Reload dashboard data to show the new test data
+      await loadDashboardData();
+      
+      setAppliancesImported(true);
+    } catch (error) {
+      console.error('❌ Failed to load test data:', error);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('energySageToken');
     localStorage.removeItem('energySageUser');
@@ -156,8 +273,106 @@ export default function Dashboard() {
   }
 
   const mode = user?.mode || 'household';
-  const totalConsumption = timeSeriesData.reduce((sum, reading) => sum + reading.kwh, 0);
-  const avgConsumption = timeSeriesData.length > 0 ? totalConsumption / timeSeriesData.length : 0;
+  
+  // 📊 Get real cumulative consumption from latest data point
+  const totalConsumption = (() => {
+    if (timeSeriesData.length === 0) return 0;
+    
+    // If we have cumulative data from simulation, use it
+    const latestReading = timeSeriesData[timeSeriesData.length - 1];
+    if (latestReading && typeof latestReading.cumulativeKwh === 'number') {
+      return latestReading.cumulativeKwh;
+    }
+    
+    // Fallback: sum all readings (for non-real-time data)
+    return timeSeriesData.reduce((sum, reading) => sum + reading.kwh, 0);
+  })();
+  
+  // Enhanced average calculation for industry mode
+  const getAverageConsumption = () => {
+    if (timeSeriesData.length === 0) return 0;
+    
+    if (mode === 'industry') {
+      // Industry mode: Use more sophisticated averaging for high data volumes
+      const recentData = timeSeriesData.slice(-168); // Last 7 days for stability
+      const recentTotal = recentData.reduce((sum, reading) => sum + reading.kwh, 0);
+      const baseAverage = recentTotal / Math.max(1, recentData.length);
+      
+      // Apply industrial smoothing factor to reduce volatility
+      const smoothingFactor = 0.92;
+      return baseAverage * smoothingFactor;
+    } else {
+      // Household mode: Keep existing simple average
+      return totalConsumption / timeSeriesData.length;
+    }
+  };
+  
+  const avgConsumption = getAverageConsumption();
+
+  // Calculate real-time cost and carbon data from current timeSeriesData with industry-specific enhancements
+  const getRealTimeCostData = () => {
+    const rates: Record<string, { cost_per_kwh: number; co2_factor: number; industry_multiplier: number }> = {
+      'US': { cost_per_kwh: 0.13, co2_factor: 0.92, industry_multiplier: 0.08 }, // Industrial rate $0.08/kWh
+      'UK': { cost_per_kwh: 0.28, co2_factor: 0.23, industry_multiplier: 0.15 }, // Industrial rate £0.15/kWh
+      'India': { cost_per_kwh: 6.5, co2_factor: 0.82, industry_multiplier: 4.2 }, // Industrial rate ₹4.2/kWh
+      'Germany': { cost_per_kwh: 0.35, co2_factor: 0.34, industry_multiplier: 0.22 } // Industrial rate €0.22/kWh
+    };
+    
+    const rateData = rates[selectedLocation] || rates['US'];
+    const effectiveRate = mode === 'industry' ? rateData.industry_multiplier : rateData.cost_per_kwh;
+    
+    if (timeSeriesData.length === 0) {
+      return { total_cost: 0, total_co2: 0 };
+    }
+    
+    // Enhanced calculation for industry mode - more predictable patterns
+    let monthlyKwh = totalConsumption;
+    
+    if (mode === 'industry') {
+      // Industry mode: More stable, predictable calculations
+      if (timeSeriesData.length > 168) { // More than a week of data
+        const uniqueDates = new Set(timeSeriesData.map(r => r.timestamp.split('T')[0]));
+        const numberOfDays = uniqueDates.size;
+        // Use rolling average for better stability in industrial settings
+        const dailyAverage = totalConsumption / numberOfDays;
+        monthlyKwh = dailyAverage * 30;
+        
+        // Add industrial load factor for more predictable consumption
+        const industrialLoadFactor = 0.85; // 85% average load factor for industry
+        monthlyKwh = monthlyKwh * industrialLoadFactor;
+      } else if (timeSeriesData.length > 24) {
+        // Daily average with industrial stability factor
+        const uniqueDates = new Set(timeSeriesData.map(r => r.timestamp.split('T')[0]));
+        const numberOfDays = uniqueDates.size;
+        monthlyKwh = (totalConsumption / numberOfDays) * 30 * 0.88; // Industrial consistency factor
+      } else {
+        // Hourly extrapolation with industrial patterns
+        const hoursOfData = timeSeriesData.length;
+        const hourlyAverage = totalConsumption / hoursOfData;
+        // Industrial facilities typically run 20-22 hours/day
+        const dailyEstimate = hourlyAverage * 22;
+        monthlyKwh = dailyEstimate * 30;
+      }
+    } else {
+      // Household mode: Keep existing logic
+      if (timeSeriesData.length > 24) {
+        const uniqueDates = new Set(timeSeriesData.map(r => r.timestamp.split('T')[0]));
+        const numberOfDays = uniqueDates.size;
+        monthlyKwh = (totalConsumption / numberOfDays) * 30;
+      } else if (timeSeriesData.length > 0) {
+        const hoursOfData = timeSeriesData.length;
+        const dailyEstimate = (totalConsumption / hoursOfData) * 24;
+        monthlyKwh = dailyEstimate * 30;
+      }
+    }
+    
+    return {
+      total_cost: monthlyKwh * effectiveRate,
+      total_co2: monthlyKwh * rateData.co2_factor
+    };
+  };
+
+  const realTimeCostData = getRealTimeCostData();
 
   // Helper: check if any real data is present
   const noData = timeSeriesData.length === 0 || !costData || recommendations.length === 0;
@@ -202,6 +417,14 @@ export default function Dashboard() {
             </div>
             
             <div className="flex items-center space-x-4">
+              {/* Simulation Status Indicator */}
+              {simulationRunning && (
+                <Badge className="bg-green-100 text-green-700 animate-pulse">
+                  <Activity className="h-3 w-3 mr-1" />
+                  Sim Active ({simulationDataCount})
+                </Badge>
+              )}
+              
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600">Location:</span>
                 <Select value={selectedLocation} onValueChange={handleLocationChange}>
@@ -216,6 +439,16 @@ export default function Dashboard() {
                   </SelectContent>
                 </Select>
               </div>
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.open('/test-api', '_blank')}
+                className="flex items-center space-x-1"
+              >
+                <TestTube2 className="h-3 w-3" />
+                <span>Test API</span>
+              </Button>
               
               <Button variant="ghost" size="sm">
                 <Settings className="h-4 w-4" />
@@ -250,7 +483,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{avgConsumption.toFixed(2)} kWh</div>
-                <p className="text-xs text-gray-600">Per hour</p>
+                <p className="text-xs text-gray-600">Per hour {simulationRunning ? '(Live)' : ''}</p>
               </CardContent>
             </Card>
             <Card>
@@ -260,9 +493,9 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {costData ? formatCurrency(costData.total_cost, selectedLocation) : formatCurrency(0, selectedLocation)}
+                  {formatCurrency(realTimeCostData.total_cost, selectedLocation)}
                 </div>
-                <p className="text-xs text-gray-600">Monthly estimate</p>
+                <p className="text-xs text-gray-600">Monthly estimate {simulationRunning ? '(Live)' : ''}</p>
               </CardContent>
             </Card>
             <Card>
@@ -272,13 +505,16 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {costData ? costData.total_co2.toFixed(1) : '0.0'} kg
+                  {realTimeCostData.total_co2.toFixed(1)} kg
                 </div>
-                <p className="text-xs text-gray-600">CO₂ monthly</p>
+                <p className="text-xs text-gray-600">CO₂ monthly {simulationRunning ? '(Live)' : ''}</p>
               </CardContent>
             </Card>
           </div>
         )}
+
+        {/* Grid Notifications */}
+        <GridNotifications className="mb-6" />
 
         {/* Anomaly Alert */}
         {anomalies.length > 0 && (
@@ -306,9 +542,11 @@ export default function Dashboard() {
 
         {/* Main Content */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="timebased">Time Analysis</TabsTrigger>
+            <TabsTrigger value="gridaware">Grid Alerts</TabsTrigger>
             <TabsTrigger value="advanced">Advanced AI</TabsTrigger>
             <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
             <TabsTrigger value="upload">Upload Data</TabsTrigger>
@@ -362,6 +600,16 @@ export default function Dashboard() {
             </div>
           </TabsContent>
 
+          {/* Time-Based Analysis */}
+          <TabsContent value="timebased" className="space-y-6">
+            <TimeBasedAnalysis />
+          </TabsContent>
+
+          {/* Grid Awareness */}
+          <TabsContent value="gridaware" className="space-y-6">
+            <GridAwareness />
+          </TabsContent>
+
           {/* Advanced AI Features */}
           <TabsContent value="advanced" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -377,7 +625,39 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="upload" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Test Data Button */}
+            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Zap className="h-5 w-5 text-blue-600" />
+                  <span>Quick Start with Test Data</span>
+                </CardTitle>
+                <CardDescription>
+                  Load comprehensive real-time energy data with 12 appliances and 30 days of realistic consumption patterns to explore all features instantly.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={handleLoadTestData} 
+                  disabled={loading}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="mr-2 h-4 w-4" />
+                      Load Comprehensive Test Data
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
               <ApplianceImport onImportSuccess={handleApplianceImport} />
               <FileUpload mode={mode} onUploadSuccess={handleFileUpload} />
             </div>
@@ -397,7 +677,16 @@ export default function Dashboard() {
 
           <TabsContent value="simulate" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <SimulationControls mode={mode} onDataReceived={handleSimulationData} />
+              <SimulationControls 
+                mode={mode} 
+                onDataReceived={handleSimulationData}
+                isRunning={simulationRunning}
+                isConnected={simulationConnected}
+                dataCount={simulationDataCount}
+                lastDataPoint={lastSimulationData}
+                onStart={startPersistentSimulation}
+                onStop={stopPersistentSimulation}
+              />
               <TimeSeriesChart
                 data={timeSeriesData.slice(-50)} // Show last 50 points for real-time
                 predictions={[]}
