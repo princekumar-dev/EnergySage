@@ -15,13 +15,15 @@ import {
   Calendar
 } from 'lucide-react';
 import { Recommendation } from '@/lib/api';
+import { formatCurrency } from '@/lib/utils';
 
 interface RecommendationsCardProps {
   recommendations: Recommendation[];
+  location?: string;
   onApplyRecommendation?: (id: string) => void;
 }
 
-export default function RecommendationsCard({ recommendations, onApplyRecommendation }: RecommendationsCardProps) {
+export default function RecommendationsCard({ recommendations, location = 'US', onApplyRecommendation }: RecommendationsCardProps) {
   const [appliedRecommendations, setAppliedRecommendations] = useState<Set<string>>(new Set());
 
   const handleApply = (id: string) => {
@@ -56,14 +58,16 @@ export default function RecommendationsCard({ recommendations, onApplyRecommenda
 
   if (recommendations.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Lightbulb className="h-5 w-5" />
+      <Card className="shadow-lg border-0">
+        <CardHeader className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-t-lg">
+          <CardTitle className="flex items-center space-x-3 text-xl">
+            <div className="p-2 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg">
+              <Lightbulb className="h-5 w-5 text-white" />
+            </div>
             <span>AI Recommendations</span>
           </CardTitle>
-          <CardDescription>
-            Personalized suggestions to optimize your energy usage
+          <CardDescription className="text-base text-gray-600">
+            Personalized suggestions to optimize your energy usage powered by advanced analytics
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -78,14 +82,16 @@ export default function RecommendationsCard({ recommendations, onApplyRecommenda
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Lightbulb className="h-5 w-5" />
+    <Card className="shadow-lg border-0">
+      <CardHeader className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-t-lg">
+        <CardTitle className="flex items-center space-x-3 text-xl">
+          <div className="p-2 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg">
+            <Lightbulb className="h-5 w-5 text-white" />
+          </div>
           <span>AI Recommendations</span>
         </CardTitle>
-        <CardDescription>
-          Personalized suggestions to optimize your energy usage
+        <CardDescription className="text-base text-gray-600">
+          Personalized suggestions to optimize your energy usage powered by advanced analytics
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -100,7 +106,7 @@ export default function RecommendationsCard({ recommendations, onApplyRecommenda
                 <div className="text-green-600">Energy</div>
               </div>
               <div className="text-center">
-                <div className="font-semibold">${totalSavings.cost.toFixed(2)}</div>
+                <div className="font-semibold">{formatCurrency(totalSavings.cost, location)}</div>
                 <div className="text-green-600">Cost</div>
               </div>
               <div className="text-center">
@@ -145,9 +151,8 @@ export default function RecommendationsCard({ recommendations, onApplyRecommenda
                     <div className="text-blue-600">Energy Saved</div>
                   </div>
                   <div className="bg-green-50 p-2 rounded text-center">
-                    <div className="font-semibold text-green-700 flex items-center justify-center">
-                      <DollarSign className="h-3 w-3 mr-1" />
-                      {rec.estimated_savings_cost.toFixed(2)}
+                    <div className="font-semibold text-green-700">
+                      {formatCurrency(rec.estimated_savings_cost, location)}
                     </div>
                     <div className="text-green-600">Cost Saved</div>
                   </div>

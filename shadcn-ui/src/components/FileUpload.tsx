@@ -85,45 +85,18 @@ export default function FileUpload({ mode, onUploadSuccess }: FileUploadProps) {
     fileInputRef.current?.click();
   };
 
-  const loadSampleData = async () => {
-    setUploading(true);
-    setUploadResult(null);
-
-    try {
-      // Simulate loading sample data
-      const sampleFile = mode === 'household' ? 'household_sample.csv' : 'industry_sample.csv';
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const result = {
-        message: `Sample ${mode} data loaded successfully`,
-        records_processed: mode === 'household' ? 72 : 48
-      };
-      
-      setUploadResult({
-        success: true,
-        message: result.message,
-        records: result.records_processed
-      });
-      onUploadSuccess(result);
-    } catch (error) {
-      setUploadResult({
-        success: false,
-        message: 'Failed to load sample data'
-      });
-    } finally {
-      setUploading(false);
-    }
-  };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Upload className="h-5 w-5" />
+    <Card className="w-full shadow-lg border-0">
+      <CardHeader className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-t-lg">
+        <CardTitle className="flex items-center space-x-3 text-xl">
+          <div className="p-2 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg">
+            <Upload className="h-5 w-5 text-white" />
+          </div>
           <span>Upload Energy Data</span>
         </CardTitle>
-        <CardDescription>
-          Upload your {mode} energy consumption data in CSV format
+        <CardDescription className="text-base text-gray-600">
+          Upload your {mode} energy consumption data in CSV format for advanced analytics
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -184,27 +157,6 @@ export default function FileUpload({ mode, onUploadSuccess }: FileUploadProps) {
           )}
         </div>
 
-        {/* Sample Data Button */}
-        <div className="flex justify-center">
-          <Button 
-            onClick={loadSampleData} 
-            variant="secondary"
-            disabled={uploading}
-            className="w-full"
-          >
-            {uploading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Loading Sample Data...
-              </>
-            ) : (
-              <>
-                <FileText className="mr-2 h-4 w-4" />
-                Load Sample {mode === 'household' ? 'Household' : 'Industrial'} Data
-              </>
-            )}
-          </Button>
-        </div>
 
         {/* Upload Result */}
         {uploadResult && (
