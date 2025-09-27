@@ -87,7 +87,7 @@ export default function ApplianceImport({ onImportSuccess }: ApplianceImportProp
 
 
   return (
-    <Card className="w-full shadow-lg border-0">
+    <Card className="w-full h-full min-h-[550px] shadow-lg border-0 flex flex-col">
       <CardHeader className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-t-lg">
         <CardTitle className="flex items-center space-x-3 text-xl">
           <div className="p-2 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg">
@@ -99,52 +99,43 @@ export default function ApplianceImport({ onImportSuccess }: ApplianceImportProp
           Import your appliance specifications for personalized AI analysis and recommendations
         </CardDescription>
       </CardHeader>
-      <CardContent className="p-6 space-y-6">
-        <Tabs defaultValue="import" className="space-y-6">
+      <CardContent className="space-y-4 flex-1 flex flex-col">
+        <Tabs defaultValue="import" className="space-y-6 flex-1 flex flex-col">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="import">Import Data</TabsTrigger>
             <TabsTrigger value="preview">Preview & Analytics</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="import" className="space-y-6">
-            {/* Expected Format */}
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                <div className="space-y-2">
-                  <div className="font-medium">Required CSV Format:</div>
-                  <div className="text-sm font-mono bg-gray-100 p-2 rounded">
+          <TabsContent value="import" className="space-y-6 flex-1 flex flex-col">
+            <div className="space-y-4 flex-1">
+              {/* Expected Format */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-2">Required CSV Format:</h4>
+                <div className="text-xs font-mono bg-white p-3 rounded border overflow-x-auto">
+                  <div className="whitespace-nowrap">
                     name,type,brand,model,rated_power,energy_efficiency_rating,age_years,usage_hours_per_day,location
                   </div>
-                  <div className="text-xs text-gray-600">
-                    • <strong>name</strong>: Appliance identifier (e.g., "Living Room AC")
-                    <br />
-                    • <strong>type</strong>: air_conditioner, refrigerator, washing_machine, tv, lighting, etc.
-                    <br />
-                    • <strong>rated_power</strong>: Power consumption in watts
-                    <br />
-                    • <strong>energy_efficiency_rating</strong>: A++, A+, A, B, C, etc.
-                    <br />
-                    • <strong>usage_hours_per_day</strong>: Average daily usage hours
-                  </div>
                 </div>
-              </AlertDescription>
-            </Alert>
+                <div className="text-xs text-gray-600 mt-2 space-y-1">
+                  <div>• <strong>name</strong>: Appliance identifier (e.g., "Living Room AC")</div>
+                  <div>• <strong>type</strong>: air_conditioner, refrigerator, washing_machine, tv, lighting</div>
+                  <div>• <strong>rated_power</strong>: Power in watts • <strong>efficiency</strong>: A++, A+, A, B, C</div>
+                </div>
+              </div>
 
-
-            {/* File Upload Area */}
-            <div
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                dragActive 
-                  ? 'border-blue-400 bg-blue-50' 
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-            >
+              {/* File Upload Area */}
+              <div
+                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors flex-1 flex items-center justify-center min-h-[200px] ${
+                  dragActive 
+                    ? 'border-blue-400 bg-blue-50' 
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+              >
               <input
                 ref={fileInputRef}
                 type="file"
@@ -168,45 +159,54 @@ export default function ApplianceImport({ onImportSuccess }: ApplianceImportProp
                     <p className="text-lg font-medium">Drop your appliance CSV file here</p>
                     <p className="text-sm text-gray-600">or click to browse files</p>
                   </div>
-                  <Button variant="outline">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Select CSV File
-                  </Button>
-                </div>
+                    <Button variant="outline">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Select CSV File
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Import Result */}
+              {importResult && (
+                <Alert className={importResult.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
+                  {importResult.success ? (
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                  )}
+                  <AlertDescription className={importResult.success ? 'text-green-700' : 'text-red-700'}>
+                    {importResult.message}
+                    {importResult.success && importResult.data && (
+                      <div className="mt-2 text-sm">
+                        <div>• {importResult.data.total_appliances} appliances imported</div>
+                        <div>• {importResult.data.consumption_data.length} data points generated</div>
+                        <div>• AI analysis and recommendations updated</div>
+                      </div>
+                    )}
+                  </AlertDescription>
+                </Alert>
               )}
             </div>
 
-            {/* Import Result */}
-            {importResult && (
-              <Alert className={importResult.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
-                {importResult.success ? (
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                ) : (
-                  <AlertCircle className="h-4 w-4 text-red-600" />
-                )}
-                <AlertDescription className={importResult.success ? 'text-green-700' : 'text-red-700'}>
-                  {importResult.message}
-                  {importResult.success && importResult.data && (
-                    <div className="mt-2 text-sm">
-                      <div>• {importResult.data.total_appliances} appliances imported</div>
-                      <div>• {importResult.data.consumption_data.length} data points generated</div>
-                      <div>• AI analysis and recommendations updated</div>
-                    </div>
-                  )}
-                </AlertDescription>
-              </Alert>
-            )}
+            {/* File Requirements - matching FileUpload layout */}
+            <div className="text-xs text-gray-500 space-y-1 mt-auto pt-4 border-t">
+              <p>• Maximum file size: 10MB</p>
+              <p>• Supported format: CSV only</p>
+              <p>• Headers must match exactly as shown above</p>
+              <p>• All appliances should have unique names</p>
+            </div>
           </TabsContent>
 
-          <TabsContent value="preview" className="space-y-6">
+          <TabsContent value="preview" className="space-y-6 flex-1 flex flex-col">
             {importedAppliances.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 flex-1 flex flex-col items-center justify-center">
                 <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p className="font-medium">No appliances imported yet</p>
                 <p className="text-sm">Import your appliance data to see the preview and analytics</p>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-6 flex-1">
                 {/* Summary Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="bg-blue-50 rounded-lg p-4">
@@ -239,9 +239,9 @@ export default function ApplianceImport({ onImportSuccess }: ApplianceImportProp
                 </div>
 
                 {/* Appliance List */}
-                <div className="space-y-3">
+                <div className="space-y-3 flex-1">
                   <h3 className="font-medium text-lg">Imported Appliances</h3>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                  <div className="space-y-2 max-h-64 overflow-y-auto border rounded-lg p-2">
                     {importedAppliances.map((appliance, index) => (
                       <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div>

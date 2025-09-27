@@ -87,7 +87,7 @@ export default function FileUpload({ mode, onUploadSuccess }: FileUploadProps) {
 
 
   return (
-    <Card className="w-full shadow-lg border-0">
+    <Card className="w-full h-full min-h-[550px] shadow-lg border-0 flex flex-col">
       <CardHeader className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-t-lg">
         <CardTitle className="flex items-center space-x-3 text-xl">
           <div className="p-2 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg">
@@ -99,37 +99,43 @@ export default function FileUpload({ mode, onUploadSuccess }: FileUploadProps) {
           Upload your {mode} energy consumption data in CSV format for advanced analytics
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Expected Format */}
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="font-medium mb-2">Expected CSV Format:</h4>
-          {mode === 'household' ? (
-            <code className="text-sm text-gray-700">
-              timestamp,device,kwh<br/>
-              2025-09-01T00:00:00,fridge,0.12<br/>
-              2025-09-01T00:00:00,light_living,0.02
-            </code>
-          ) : (
-            <code className="text-sm text-gray-700">
-              timestamp,machine_id,kwh,process_id<br/>
-              2025-09-01T09:00:00,MACH-A,5.3,LINE-1<br/>
-              2025-09-01T09:00:00,MACH-B,4.8,LINE-1
-            </code>
-          )}
-        </div>
+      <CardContent className="space-y-4 flex-1 flex flex-col justify-between">
+        <div className="space-y-4 flex-1">
+          {/* Expected Format */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h4 className="font-medium mb-2">Expected CSV Format:</h4>
+            <div className="text-xs font-mono bg-white p-3 rounded border overflow-x-auto">
+              <div className="whitespace-nowrap">
+                {mode === 'household' ? 'timestamp,device,kwh' : 'timestamp,machine_id,kwh,process_id'}
+              </div>
+            </div>
+            <div className="text-xs text-gray-600 mt-2 space-y-1">
+              {mode === 'household' ? (
+                <>
+                  <div>• <strong>timestamp</strong>: ISO format (2025-09-01T00:00:00)</div>
+                  <div>• <strong>device</strong>: Appliance name • <strong>kwh</strong>: Energy consumption</div>
+                </>
+              ) : (
+                <>
+                  <div>• <strong>timestamp</strong>: ISO format (2025-09-01T09:00:00)</div>
+                  <div>• <strong>machine_id</strong>: Machine identifier • <strong>kwh</strong>: Energy • <strong>process_id</strong>: Process</div>
+                </>
+              )}
+            </div>
+          </div>
 
-        {/* Upload Area */}
-        <div
-          className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-            dragActive 
-              ? 'border-blue-500 bg-blue-50' 
-              : 'border-gray-300 hover:border-gray-400'
-          } ${uploading ? 'pointer-events-none opacity-50' : ''}`}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-        >
+          {/* Upload Area */}
+          <div
+            className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors flex-1 flex items-center justify-center min-h-[200px] ${
+              dragActive 
+                ? 'border-blue-500 bg-blue-50' 
+                : 'border-gray-300 hover:border-gray-400'
+            } ${uploading ? 'pointer-events-none opacity-50' : ''}`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+          >
           <input
             ref={fileInputRef}
             type="file"
@@ -155,32 +161,32 @@ export default function FileUpload({ mode, onUploadSuccess }: FileUploadProps) {
               </Button>
             </div>
           )}
+          </div>
+
+          {/* Upload Result */}
+          {uploadResult && (
+            <Alert className={uploadResult.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
+              <div className="flex items-center space-x-2">
+                {uploadResult.success ? (
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-red-600" />
+                )}
+                <AlertDescription className={uploadResult.success ? 'text-green-700' : 'text-red-700'}>
+                  {uploadResult.message}
+                  {uploadResult.success && uploadResult.records && (
+                    <span className="block mt-1 font-medium">
+                      {uploadResult.records} records processed successfully
+                    </span>
+                  )}
+                </AlertDescription>
+              </div>
+            </Alert>
+          )}
         </div>
 
-
-        {/* Upload Result */}
-        {uploadResult && (
-          <Alert className={uploadResult.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
-            <div className="flex items-center space-x-2">
-              {uploadResult.success ? (
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              ) : (
-                <AlertCircle className="h-4 w-4 text-red-600" />
-              )}
-              <AlertDescription className={uploadResult.success ? 'text-green-700' : 'text-red-700'}>
-                {uploadResult.message}
-                {uploadResult.success && uploadResult.records && (
-                  <span className="block mt-1 font-medium">
-                    {uploadResult.records} records processed successfully
-                  </span>
-                )}
-              </AlertDescription>
-            </div>
-          </Alert>
-        )}
-
         {/* File Requirements */}
-        <div className="text-xs text-gray-500 space-y-1">
+        <div className="text-xs text-gray-500 space-y-1 mt-auto pt-4 border-t">
           <p>• Maximum file size: 10MB</p>
           <p>• Supported format: CSV only</p>
           <p>• Timestamps should be in ISO format (YYYY-MM-DDTHH:mm:ss)</p>

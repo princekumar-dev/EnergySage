@@ -3,69 +3,38 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Play, Pause, Square, Activity, Wifi, WifiOff } from 'lucide-react';
-import { api, SimulationWebSocket, EnergyReading } from '@/lib/api';
+import { Play, Square, Activity, Wifi, WifiOff } from 'lucide-react';
+import { EnergyReading } from '@/lib/api';
 
 interface SimulationControlsProps {
   mode: 'household' | 'industry';
   onDataReceived: (data: EnergyReading) => void;
+  // Persistent simulation props from Dashboard
+  isRunning: boolean;
+  isConnected: boolean;
+  dataCount: number;
+  lastDataPoint: EnergyReading | null;
+  onStart: () => Promise<void>;
+  onStop: () => Promise<void>;
 }
 
-export default function SimulationControls({ mode, onDataReceived }: SimulationControlsProps) {
-  const [isRunning, setIsRunning] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
-  const [lastDataPoint, setLastDataPoint] = useState<EnergyReading | null>(null);
-  const [dataCount, setDataCount] = useState(0);
-  const [ws, setWs] = useState<SimulationWebSocket | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (ws) {
-        ws.disconnect();
-      }
-    };
-  }, [ws]);
-
+export default function SimulationControls({ 
+  mode, 
+  onDataReceived, 
+  isRunning, 
+  isConnected, 
+  dataCount, 
+  lastDataPoint, 
+  onStart, 
+  onStop 
+}: SimulationControlsProps) {
+  
   const startSimulation = async () => {
-    try {
-      await api.startSimulation();
-      
-      // Create WebSocket connection
-      const websocket = new SimulationWebSocket();
-      websocket.onData((data: EnergyReading) => {
-        setLastDataPoint(data);
-        setDataCount(prev => prev + 1);
-        onDataReceived(data);
-      });
-      
-      websocket.connect();
-      setWs(websocket);
-      setIsRunning(true);
-      setIsConnected(true);
-    } catch (error) {
-      console.error('Failed to start simulation:', error);
-    }
-  };
-
-  const pauseSimulation = () => {
-    setIsRunning(false);
-    // In a real implementation, this would pause the WebSocket data flow
+    await onStart();
   };
 
   const stopSimulation = async () => {
-    try {
-      await api.stopSimulation();
-      if (ws) {
-        ws.disconnect();
-        setWs(null);
-      }
-      setIsRunning(false);
-      setIsConnected(false);
-      setDataCount(0);
-      setLastDataPoint(null);
-    } catch (error) {
-      console.error('Failed to stop simulation:', error);
-    }
+    await onStop();
   };
 
   const getStatusColor = () => {
@@ -90,7 +59,7 @@ export default function SimulationControls({ mode, onDataReceived }: SimulationC
           <span>Real-time Simulation</span>
         </CardTitle>
         <CardDescription className="text-base text-gray-600">
-          Stream live {mode} energy data for real-time analysis and monitoring
+          Simulate real-time {mode} energy data based on your imported patterns
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -111,25 +80,14 @@ export default function SimulationControls({ mode, onDataReceived }: SimulationC
 
         {/* Controls */}
         <div className="flex space-x-2">
-          {!isRunning ? (
-            <Button 
-              onClick={startSimulation} 
-              className="flex-1"
-              disabled={isConnected && !isRunning}
-            >
-              <Play className="h-4 w-4 mr-2" />
-              Start Simulation
-            </Button>
-          ) : (
-            <Button 
-              onClick={pauseSimulation} 
-              variant="outline" 
-              className="flex-1"
-            >
-              <Pause className="h-4 w-4 mr-2" />
-              Pause
-            </Button>
-          )}
+          <Button 
+            onClick={startSimulation} 
+            className="flex-1"
+            disabled={isRunning}
+          >
+            <Play className="h-4 w-4 mr-2" />
+            {isRunning ? 'Simulation Running' : 'Start Simulation'}
+          </Button>
           
           <Button 
             onClick={stopSimulation} 
@@ -142,7 +100,7 @@ export default function SimulationControls({ mode, onDataReceived }: SimulationC
         </div>
 
         {/* Live Data Display */}
-        {isConnected && (
+        {isConnected && isRunning ? (
           <Alert className="border-blue-200 bg-blue-50">
             <Activity className="h-4 w-4 text-blue-600" />
             <AlertDescription className="text-blue-700">
@@ -172,16 +130,30 @@ export default function SimulationControls({ mode, onDataReceived }: SimulationC
               </div>
             </AlertDescription>
           </Alert>
-        )}
+        ) : !isConnected && dataCount > 0 ? (
+          <Alert className="border-gray-200 bg-gray-50">
+            <Square className="h-4 w-4 text-gray-600" />
+            <AlertDescription className="text-gray-600">
+              <div className="text-sm">
+                ⏹️ Simulation stopped. Total data points generated: <span className="font-medium">{dataCount}</span>
+                {lastDataPoint && (
+                  <div className="mt-1 text-xs">
+                    Last reading: {lastDataPoint.kwh.toFixed(2)} kWh from {lastDataPoint.device}
+                  </div>
+                )}
+              </div>
+            </AlertDescription>
+          </Alert>
+        ) : null}
 
         {/* Simulation Info */}
         <div className="bg-gray-50 p-3 rounded-lg">
           <h4 className="font-medium mb-2 text-sm">Simulation Details</h4>
           <div className="space-y-1 text-xs text-gray-600">
-            <p>• Generates realistic {mode} energy patterns</p>
-            <p>• Updates every 2 seconds with new data points</p>
-            <p>• Includes random variations and usage spikes</p>
-            <p>• Perfect for testing anomaly detection</p>
+            <p>• Uses your imported data patterns for realistic simulation</p>
+            <p>• Updates every 2 seconds with variations of your data</p>
+            <p>• Applies time-based usage factors to imported appliances</p>
+            <p>• Perfect for testing with your actual energy profile</p>
           </div>
         </div>
 
