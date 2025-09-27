@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -16,7 +17,8 @@ import {
   Home,
   Factory,
   AlertTriangle,
-  Calendar
+  Calendar,
+  CheckCircle
 } from 'lucide-react';
 
 import FileUpload from '@/components/FileUpload';
@@ -24,8 +26,14 @@ import TimeSeriesChart from '@/components/charts/TimeSeriesChart';
 import BreakdownChart from '@/components/charts/BreakdownChart';
 import RecommendationsCard from '@/components/RecommendationsCard';
 import SimulationControls from '@/components/SimulationControls';
+import EnergyScoreCard from '@/components/EnergyScoreCard';
+import SmartAlerts from '@/components/SmartAlerts';
+import PredictiveMaintenanceCard from '@/components/PredictiveMaintenanceCard';
+import BenchmarkCard from '@/components/BenchmarkCard';
+import ApplianceImport from '@/components/ApplianceImport';
 
-import { api, EnergyReading, Prediction, Anomaly, Recommendation, CostData, User } from '@/lib/api';
+import { api, EnergyReading, Prediction, Anomaly, Recommendation, CostData, User, ImportedApplianceData } from '@/lib/api';
+import { formatCurrency } from '@/lib/utils';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -34,6 +42,7 @@ export default function Dashboard() {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [appliancesImported, setAppliancesImported] = useState(false);
   const [costData, setCostData] = useState<CostData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedLocation, setSelectedLocation] = useState('US');
@@ -78,8 +87,8 @@ export default function Dashboard() {
       );
       setAnomalies(anomalies);
 
-      // Load recommendations
-      const recommendations = await api.getRecommendations();
+      // Load recommendations with location for accurate pricing
+      const recommendations = await api.getRecommendations(selectedLocation);
       setRecommendations(recommendations);
 
       // Load cost data
@@ -106,6 +115,10 @@ export default function Dashboard() {
     setSelectedLocation(location);
     const newCostData = await api.getCostData(location);
     setCostData(newCostData);
+    
+    // Reload recommendations with new location pricing
+    const newRecommendations = await api.getRecommendations(location);
+    setRecommendations(newRecommendations);
   };
 
   const handleForecastChange = async (horizon: string) => {
@@ -113,6 +126,16 @@ export default function Dashboard() {
     setForecastHorizon(days);
     const newPredictions = await api.getPredictions(days);
     setPredictions(newPredictions);
+  };
+
+  const handleApplianceImport = async (data: ImportedApplianceData) => {
+    try {
+      setAppliancesImported(true);
+      // Reload dashboard data to reflect appliance-based analytics
+      await loadDashboardData();
+    } catch (error) {
+      console.error('Failed to handle appliance import:', error);
+    }
   };
 
   const handleLogout = () => {
@@ -136,8 +159,22 @@ export default function Dashboard() {
   const totalConsumption = timeSeriesData.reduce((sum, reading) => sum + reading.kwh, 0);
   const avgConsumption = timeSeriesData.length > 0 ? totalConsumption / timeSeriesData.length : 0;
 
+  // Helper: check if any real data is present
+  const noData = timeSeriesData.length === 0 || !costData || recommendations.length === 0;
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {noData && (
+        <div className="container mx-auto px-4 py-8">
+          <Alert className="border-yellow-200 bg-yellow-50 mb-8">
+            <AlertTriangle className="h-5 w-5 text-yellow-600" />
+            <AlertDescription className="text-yellow-800">
+              <div className="font-medium mb-1">No data available</div>
+              <div className="text-sm">Please import your appliance or energy data using the <b>Upload Data</b> tab to view analytics and recommendations.</div>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
@@ -194,55 +231,54 @@ export default function Dashboard() {
 
       <div className="container mx-auto px-4 py-6">
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Consumption</CardTitle>
-              <Zap className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalConsumption.toFixed(1)} kWh</div>
-              <p className="text-xs text-gray-600">Last 24 hours</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Usage</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{avgConsumption.toFixed(2)} kWh</div>
-              <p className="text-xs text-gray-600">Per hour</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Estimated Cost</CardTitle>
-              <DollarSign className="h-4 w-4 text-yellow-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ${costData ? costData.total_cost.toFixed(2) : '0.00'}
-              </div>
-              <p className="text-xs text-gray-600">Monthly estimate</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Carbon Footprint</CardTitle>
-              <Leaf className="h-4 w-4 text-emerald-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {costData ? costData.total_co2.toFixed(1) : '0.0'} kg
-              </div>
-              <p className="text-xs text-gray-600">CO₂ monthly</p>
-            </CardContent>
-          </Card>
-        </div>
+        {!noData && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Consumption</CardTitle>
+                <Zap className="h-4 w-4 text-blue-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalConsumption.toFixed(1)} kWh</div>
+                <p className="text-xs text-gray-600">Last 24 hours</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Average Usage</CardTitle>
+                <TrendingUp className="h-4 w-4 text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{avgConsumption.toFixed(2)} kWh</div>
+                <p className="text-xs text-gray-600">Per hour</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Estimated Cost</CardTitle>
+                <DollarSign className="h-4 w-4 text-yellow-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {costData ? formatCurrency(costData.total_cost, selectedLocation) : formatCurrency(0, selectedLocation)}
+                </div>
+                <p className="text-xs text-gray-600">Monthly estimate</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Carbon Footprint</CardTitle>
+                <Leaf className="h-4 w-4 text-emerald-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {costData ? costData.total_co2.toFixed(1) : '0.0'} kg
+                </div>
+                <p className="text-xs text-gray-600">CO₂ monthly</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Anomaly Alert */}
         {anomalies.length > 0 && (
@@ -270,9 +306,11 @@ export default function Dashboard() {
 
         {/* Main Content */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="advanced">Advanced AI</TabsTrigger>
+            <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
             <TabsTrigger value="upload">Upload Data</TabsTrigger>
             <TabsTrigger value="simulate">Simulate</TabsTrigger>
           </TabsList>
@@ -292,7 +330,7 @@ export default function Dashboard() {
             </div>
             
             {/* Recommendations */}
-            <RecommendationsCard recommendations={recommendations} />
+            <RecommendationsCard recommendations={recommendations} location={selectedLocation} />
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
@@ -324,8 +362,37 @@ export default function Dashboard() {
             </div>
           </TabsContent>
 
+          {/* Advanced AI Features */}
+          <TabsContent value="advanced" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <EnergyScoreCard />
+              <SmartAlerts />
+              <BenchmarkCard className="lg:col-span-2" />
+            </div>
+          </TabsContent>
+
+          {/* Predictive Maintenance */}
+          <TabsContent value="maintenance" className="space-y-6">
+            <PredictiveMaintenanceCard location={selectedLocation} />
+          </TabsContent>
+
           <TabsContent value="upload" className="space-y-6">
-            <FileUpload mode={mode} onUploadSuccess={handleFileUpload} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ApplianceImport onImportSuccess={handleApplianceImport} />
+              <FileUpload mode={mode} onUploadSuccess={handleFileUpload} />
+            </div>
+            
+            {appliancesImported && (
+              <Alert className="border-green-200 bg-green-50">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-700">
+                  <div className="font-medium mb-1">Appliances imported successfully!</div>
+                  <div className="text-sm">
+                    AI analysis has been updated with your appliance data. Check the Advanced AI and Maintenance tabs for personalized insights.
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
           </TabsContent>
 
           <TabsContent value="simulate" className="space-y-6">
