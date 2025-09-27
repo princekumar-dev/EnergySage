@@ -98,16 +98,18 @@ export default function TimeSeriesChart({ data, predictions, anomalies, mode }: 
     : 0;
 
   return (
-    <Card className="col-span-2">
-      <CardHeader>
+    <Card className="col-span-2 shadow-lg border-0">
+      <CardHeader className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-t-lg">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5" />
+            <CardTitle className="flex items-center space-x-3 text-xl">
+              <div className="p-2 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-white" />
+              </div>
               <span>Energy Consumption Timeline</span>
             </CardTitle>
-            <CardDescription>
-              {mode === 'household' ? 'Household' : 'Industrial'} energy usage over time with AI predictions
+            <CardDescription className="text-base text-gray-600">
+              {mode === 'household' ? 'Household' : 'Industrial'} energy usage over time with AI predictions and advanced analytics
             </CardDescription>
           </div>
           <div className="text-right space-y-1">

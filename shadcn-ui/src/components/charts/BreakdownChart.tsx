@@ -67,14 +67,16 @@ export default function BreakdownChart({ data, mode }: BreakdownChartProps) {
   const topConsumer = chartData[0];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <PieChartIcon className="h-5 w-5" />
+    <Card className="shadow-lg border-0">
+      <CardHeader className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-t-lg">
+        <CardTitle className="flex items-center space-x-3 text-xl">
+          <div className="p-2 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg">
+            <PieChartIcon className="h-5 w-5 text-white" />
+          </div>
           <span>{mode === 'household' ? 'Appliance' : 'Machine'} Breakdown</span>
         </CardTitle>
-        <CardDescription>
-          Energy consumption by {mode === 'household' ? 'appliance' : 'machine/process'}
+        <CardDescription className="text-base text-gray-600">
+          Energy consumption by {mode === 'household' ? 'appliance' : 'machine/process'} with detailed analytics
         </CardDescription>
       </CardHeader>
       <CardContent>
