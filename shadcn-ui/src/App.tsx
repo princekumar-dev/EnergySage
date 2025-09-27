@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
+import APITestPage from './pages/APITestPage';
 import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -18,6 +19,7 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/test-api" element={<APITestPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
