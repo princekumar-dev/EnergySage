@@ -1,0 +1,6 @@
+name,type,brand,model,wattage,age_years,efficiency_rating,usage_hours_per_day,room_location
+Kitchen Fridge,Refrigerator,Samsung,RF23M8070SR,250,3,A+,24,Kitchen
+Living Room TV,Electronics,LG,OLED55C1PUB,120,1,A++,6,Living Room
+Bedroom AC,HVAC,Friedrich,Chill CP06G10B,1800,2,B+,8,Bedroom
+Office Laptop,Electronics,Dell,XPS 15,130,1,A+,8,Home Office
+Laundry Washer,Washer,Whirlpool,WTW4816FW,400,4,B,2,Laundry Room

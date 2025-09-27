@@ -1,0 +1,11 @@
+name,type,brand,model,wattage,age_years,efficiency_rating,usage_hours_per_day,room_location
+Valid Refrigerator,Refrigerator,Samsung,RF28R7551SR,300,2,A+,24,Kitchen
+Invalid Wattage,Washer,LG,WM9000HVA,abc,3,A,1.5,Laundry Room
+Negative Age,HVAC,Carrier,24ACC636A003,2400,-1,B+,8,Living Room
+Missing Brand,,Bosch,SHPM88Z75N,1800,1,A+++,1,Kitchen
+Invalid Efficiency,Oven,Whirlpool,WOS51EC0AS,2400,4,Z,1.2,Kitchen
+High Usage Hours,Microwave,Panasonic,NN-SN966S,1200,2,B+,30,Kitchen
+Zero Wattage,Electronics,Sony,XBR65X900H,0,1,A,6,Living Room
+Very Old Appliance,Electronics,Dell,Legacy PC,300,50,D,8,Home Office
+Empty Name,,HP,Pavilion,300,3,B,10,Home Office
+Missing Location,Water Heater,Rheem,XE50T10H45U0,4500,6,C+,3,

@@ -1,0 +1,21 @@
+name,type,brand,model,wattage,age_years,efficiency_rating,usage_hours_per_day,room_location
+Refrigerator,Refrigerator,Samsung,RF28R7551SR,300,2,A+,24,Kitchen
+Washing Machine,Washer,LG,WM9000HVA,500,3,A,1.5,Laundry Room
+Air Conditioner,HVAC,Carrier,24ACC636A003,2400,5,B+,8,Living Room
+Dishwasher,Dishwasher,Bosch,SHPM88Z75N,1800,1,A+++,1,Kitchen
+Electric Oven,Oven,Whirlpool,WOS51EC0AS,2400,4,B,1.2,Kitchen
+Microwave,Microwave,Panasonic,NN-SN966S,1200,2,B+,0.5,Kitchen
+Television,Electronics,Sony,XBR65X900H,150,1,A,6,Living Room
+Laptop,Electronics,Dell,XPS 13,65,1,A,8,Home Office
+Desktop Computer,Electronics,HP,Pavilion,300,3,B,10,Home Office
+Water Heater,Water Heater,Rheem,XE50T10H45U0,4500,6,C+,3,Basement
+Clothes Dryer,Dryer,Maytag,MED4500MW,2400,3,B,1,Laundry Room
+Ceiling Fan,Fan,Hunter,52" Premier,75,2,A,12,Bedroom
+Space Heater,Heater,Dyson,AM09,2000,1,A,4,Bedroom
+Coffee Maker,Small Appliance,Keurig,K-Elite,1500,2,B,0.3,Kitchen
+Toaster,Small Appliance,Cuisinart,CPT-440,1800,3,B+,0.2,Kitchen
+Vacuum Cleaner,Small Appliance,Shark,Navigator,1200,2,A,0.5,Storage
+Gaming Console,Electronics,PlayStation,PS5,220,1,A,4,Living Room
+Router,Electronics,Netgear,Nighthawk,30,2,A,24,Home Office
+Smart Thermostat,HVAC,Nest,Learning Thermostat,5,1,A+++,24,Hallway
+LED Light Bulbs,Lighting,Philips,Hue,9,1,A++,8,Various Rooms
