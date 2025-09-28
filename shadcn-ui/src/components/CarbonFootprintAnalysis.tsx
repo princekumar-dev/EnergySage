@@ -11,6 +11,7 @@ import {
   Home, 
   Target,
   TrendingDown,
+  TrendingUp,
   Award,
   Lightbulb,
   Recycle,
@@ -18,8 +19,41 @@ import {
   CheckCircle,
   Clock,
   DollarSign,
-  Zap
+  Zap,
+  Calendar,
+  BarChart3,
+  ShoppingCart,
+  Filter,
+  X,
+  Plus,
+  Minus
 } from 'lucide-react';
+
+interface CarbonHistoryPoint {
+  date: string;
+  daily_co2: number;
+  monthly_co2: number;
+  footprint: number;
+  efficiency_score: number;
+}
+
+interface CarbonTrends {
+  footprint_trend: 'increasing' | 'decreasing' | 'stable';
+  trend_percentage: number;
+  best_day: string;
+  worst_day: string;
+  average_monthly: number;
+}
+
+interface ApplianceAnalysis {
+  device: string;
+  total_kwh: number;
+  average_kwh: number;
+  peak_kwh: number;
+  co2_impact: number;
+  usage_pattern: 'frequent' | 'moderate' | 'occasional';
+  efficiency_rating: 'excellent' | 'good' | 'moderate' | 'poor';
+}
 
 interface CarbonData {
   current_footprint: number;
@@ -42,6 +76,9 @@ interface CarbonData {
     today_savings: number;
     efficiency_score: number;
   };
+  historical_data?: CarbonHistoryPoint[];
+  trends?: CarbonTrends;
+  appliance_analysis?: ApplianceAnalysis[];
 }
 
 interface OffsetRecommendation {
@@ -88,6 +125,7 @@ interface CarbonFootprintProps {
   };
   timeSeriesData?: any[];
   hasUploadedData?: boolean;
+  mode?: 'household' | 'industry';
 }
 
 export default function CarbonFootprintAnalysis({ 
@@ -95,7 +133,8 @@ export default function CarbonFootprintAnalysis({
   totalConsumption = 0, 
   realTimeCostData,
   timeSeriesData = [],
-  hasUploadedData = false 
+  hasUploadedData = false,
+  mode = 'household'
 }: CarbonFootprintProps) {
   const [carbonData, setCarbonData] = useState<CarbonData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -103,6 +142,8 @@ export default function CarbonFootprintAnalysis({
   const [refreshing, setRefreshing] = useState(false);
   const [usingRealData, setUsingRealData] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [selectedOffsets, setSelectedOffsets] = useState<string[]>([]);
+  const [offsetFilter, setOffsetFilter] = useState<'all' | 'tree_planting' | 'renewable_energy' | 'carbon_credits' | 'efficiency_upgrade'>('all');
 
   useEffect(() => {
     // Calculate carbon data directly from props
@@ -150,8 +191,10 @@ export default function CarbonFootprintAnalysis({
       // Ensure minimum reasonable consumption (1 kWh for calculations)
       totalKwh = Math.max(1, totalKwh);
       
-      // US average carbon intensity: 0.85 kg CO2/kWh (realistic value)
-      const carbonIntensity = 0.85;
+      // Carbon intensity based on mode
+      // Household: 0.85 kg CO2/kWh (US grid average)
+      // Industry: 0.92 kg CO2/kWh (higher due to peak load and less renewable integration)
+      const carbonIntensity = mode === 'industry' ? 0.92 : 0.85;
       
       // Calculate CO2 emissions with proper scaling
       let currentCO2Monthly = 0;
@@ -172,7 +215,58 @@ export default function CarbonFootprintAnalysis({
       // Calculate current footprint in tons per year with realistic bounds
       const currentFootprint = Math.max(0.1, Math.min(25, yearlyProjection / 1000));
       
+      // Average baseline varies by mode
+      // Household: 6.1 tons/year (US average)
+      // Industry: 15.2 tons/year (typical small business average)
+      const averageFootprint = mode === 'industry' ? 15.2 : 6.1;
+      
       console.log(`📊 Calculated - Total kWh: ${totalKwh.toFixed(2)}, Monthly CO2: ${currentCO2Monthly.toFixed(2)} kg, Daily CO2: ${dailyCO2.toFixed(2)} kg, Yearly: ${yearlyProjection.toFixed(2)} kg, Footprint: ${currentFootprint.toFixed(2)} tons`);
+
+      // Generate historical data from time series
+      const historicalData: CarbonHistoryPoint[] = [];
+      if (timeSeriesData.length >= 7) {
+        // Group by day and calculate daily averages
+        const dailyGroups = new Map<string, any[]>();
+        timeSeriesData.forEach((point: any) => {
+          const date = new Date(point.timestamp || Date.now()).toISOString().split('T')[0];
+          if (!dailyGroups.has(date)) dailyGroups.set(date, []);
+          dailyGroups.get(date)!.push(point);
+        });
+        
+        // Create history points for last 30 days
+        Array.from(dailyGroups.entries()).slice(-30).forEach(([date, dayData]) => {
+          const dayKwh = dayData.reduce((sum, d) => sum + (d.kwh || 0), 0);
+          const dayFootprint = (dayKwh * carbonIntensity) / 1000 * 365; // Annualized
+          const dayEfficiency = Math.max(20, 100 - ((dayFootprint / averageFootprint) * 50));
+          
+          historicalData.push({
+            date,
+            daily_co2: dayKwh * carbonIntensity,
+            monthly_co2: dayKwh * carbonIntensity * 30,
+            footprint: dayFootprint,
+            efficiency_score: dayEfficiency
+          });
+        });
+      }
+      
+      // Calculate trends
+      const trends: CarbonTrends | undefined = historicalData.length >= 7 ? {
+        footprint_trend: (() => {
+          const recent = historicalData.slice(-7).reduce((sum, d) => sum + d.footprint, 0) / 7;
+          const previous = historicalData.slice(-14, -7).reduce((sum, d) => sum + d.footprint, 0) / 7;
+          if (recent < previous * 0.95) return 'decreasing';
+          if (recent > previous * 1.05) return 'increasing';
+          return 'stable';
+        })(),
+        trend_percentage: (() => {
+          const recent = historicalData.slice(-7).reduce((sum, d) => sum + d.footprint, 0) / 7;
+          const previous = historicalData.slice(-14, -7).reduce((sum, d) => sum + d.footprint, 0) / 7;
+          return Math.round(((recent - previous) / previous) * 100);
+        })(),
+        best_day: historicalData.reduce((best, curr) => curr.efficiency_score > best.efficiency_score ? curr : best).date,
+        worst_day: historicalData.reduce((worst, curr) => curr.efficiency_score < worst.efficiency_score ? curr : worst).date,
+        average_monthly: Math.round(historicalData.reduce((sum, d) => sum + d.monthly_co2, 0) / historicalData.length)
+      } : undefined;
 
       const calculatedData: CarbonData = {
         current_footprint: Math.round(currentFootprint * 10) / 10,
@@ -180,9 +274,11 @@ export default function CarbonFootprintAnalysis({
         monthly_co2: Math.round(currentCO2Monthly),
         yearly_projection: Math.round(yearlyProjection),
         carbon_intensity: carbonIntensity,
+        historical_data: historicalData,
+        trends,
         sustainability_score: (() => {
-          // Score based on comparison to average (6.1 tons/year)
-          const ratio = currentFootprint / 6.1;
+          // Score based on comparison to mode-specific average
+          const ratio = currentFootprint / averageFootprint;
           if (ratio <= 0.5) return 95; // Excellent: 50% below average
           if (ratio <= 0.75) return 85; // Very good: 25% below average
           if (ratio <= 1.0) return 75; // Good: at or below average
@@ -191,18 +287,29 @@ export default function CarbonFootprintAnalysis({
           return Math.max(20, 40 - (ratio * 10)); // Very poor: significantly above average
         })(),
         grade: (() => {
-          if (currentFootprint <= 3) return 'A+';
-          if (currentFootprint <= 4.5) return 'A';
-          if (currentFootprint <= 6) return 'B+';
-          if (currentFootprint <= 8) return 'B';
-          if (currentFootprint <= 10) return 'C+';
-          if (currentFootprint <= 13) return 'C';
-          return 'D';
+          // Mode-specific grade thresholds
+          if (mode === 'industry') {
+            if (currentFootprint <= 8) return 'A+';
+            if (currentFootprint <= 12) return 'A';
+            if (currentFootprint <= 15) return 'B+';
+            if (currentFootprint <= 20) return 'B';
+            if (currentFootprint <= 25) return 'C+';
+            if (currentFootprint <= 30) return 'C';
+            return 'D';
+          } else {
+            if (currentFootprint <= 3) return 'A+';
+            if (currentFootprint <= 4.5) return 'A';
+            if (currentFootprint <= 6) return 'B+';
+            if (currentFootprint <= 8) return 'B';
+            if (currentFootprint <= 10) return 'C+';
+            if (currentFootprint <= 13) return 'C';
+            return 'D';
+          }
         })() as 'A+' | 'A' | 'B+' | 'B' | 'C+' | 'C' | 'D' | 'F',
         peer_comparison: {
           percentile: (() => {
-            // Calculate percentile based on normal distribution around 6.1 tons
-            const ratio = currentFootprint / 6.1;
+            // Calculate percentile based on mode-specific distribution
+            const ratio = currentFootprint / averageFootprint;
             if (ratio <= 0.5) return 95; // Top 5%
             if (ratio <= 0.75) return 85; // Top 15%
             if (ratio <= 0.9) return 75; // Top 25%
@@ -211,7 +318,7 @@ export default function CarbonFootprintAnalysis({
             if (ratio <= 1.5) return 25; // Bottom 75%
             return Math.max(5, 20 - (ratio * 5)); // Bottom performers
           })(),
-          average_footprint: 6.1
+          average_footprint: averageFootprint
         },
         real_time_data: {
           current_consumption: (() => {
@@ -224,7 +331,7 @@ export default function CarbonFootprintAnalysis({
           })(),
           co2_rate: Math.round(Math.max(0.01, dailyCO2 / 24) * 1000) / 1000, // kg CO2 per hour
           today_savings: (() => {
-            const avgDailyCO2 = 6.1 * 1000 / 365; // Average daily CO2 in kg (16.7 kg)
+            const avgDailyCO2 = averageFootprint * 1000 / 365; // Mode-specific average daily CO2 in kg
             
             // If user is better than average, show actual savings
             if (dailyCO2 < avgDailyCO2) {
@@ -233,13 +340,15 @@ export default function CarbonFootprintAnalysis({
             }
             
             // If user is worse than average, show potential daily savings from efficiency improvements
-            // Calculate 10% improvement potential as today's achievable savings
-            const potentialSavings = dailyCO2 * 0.1; // 10% reduction potential
+            // Industrial: 8% improvement potential (harder to optimize)
+            // Household: 10% improvement potential (easier wins available)
+            const improvementRate = mode === 'industry' ? 0.08 : 0.10;
+            const potentialSavings = dailyCO2 * improvementRate;
             return Math.round(Math.max(0.5, potentialSavings) * 100) / 100;
           })(),
           efficiency_score: (() => {
-            // Efficiency based on performance vs average
-            const ratio = currentFootprint / 6.1;
+            // Efficiency based on performance vs mode-specific average
+            const ratio = currentFootprint / averageFootprint;
             if (ratio <= 0.5) return 95;
             if (ratio <= 0.75) return 85;
             if (ratio <= 1.0) return 75;
@@ -295,24 +404,59 @@ export default function CarbonFootprintAnalysis({
             popularity: 76
           }
         ],
+        // Analyze appliance patterns from real data
+        appliance_analysis: (() => {
+          if (recentData.length === 0) return [];
+          
+          // Group by device/appliance
+          const applianceGroups = new Map<string, any[]>();
+          recentData.forEach((point: any) => {
+            const device = point.device || point.appliance || 'Unknown Device';
+            if (!applianceGroups.has(device)) applianceGroups.set(device, []);
+            applianceGroups.get(device)!.push(point);
+          });
+          
+          // Analyze each appliance
+          return Array.from(applianceGroups.entries()).map(([device, data]) => {
+            const totalKwh = data.reduce((sum, d) => sum + (d.kwh || 0), 0);
+            const avgKwh = totalKwh / Math.max(1, data.length);
+            const peakUsage = Math.max(...data.map(d => d.kwh || 0));
+            const co2Impact = totalKwh * carbonIntensity;
+            
+            return {
+              device,
+              total_kwh: totalKwh,
+              average_kwh: avgKwh,
+              peak_kwh: peakUsage,
+              co2_impact: co2Impact,
+              usage_pattern: (data.length > 24 ? 'frequent' : data.length > 7 ? 'moderate' : 'occasional') as 'frequent' | 'moderate' | 'occasional',
+              efficiency_rating: (avgKwh < 0.5 ? 'excellent' : avgKwh < 1.5 ? 'good' : avgKwh < 3.0 ? 'moderate' : 'poor') as 'excellent' | 'good' | 'moderate' | 'poor'
+            };
+          }).sort((a, b) => b.co2_impact - a.co2_impact);
+        })(),
+        
         reduction_tips: ([
           {
             category: 'heating' as const,
-            tip: `Optimize ${recentData.filter((r: any) => r.device?.toLowerCase().includes('heat')).length > 0 ? 'your heating system' : 'heating settings'} during peak hours`,
-            potential_reduction: Math.round(Math.max(0.1, currentFootprint * 0.18) * 100) / 100,
-            difficulty: (currentFootprint > 8 ? 'easy' : 'moderate') as 'easy' | 'moderate' | 'challenging',
-            cost: 'free',
-            impact_score: currentFootprint > 6 ? 9 : 7,
-            implementation_time: '5 minutes'
+            tip: mode === 'industry' 
+              ? `Implement smart building automation for HVAC systems and process heating optimization`
+              : `Optimize ${recentData.filter((r: any) => r.device?.toLowerCase().includes('heat')).length > 0 ? 'your heating system' : 'heating settings'} during peak hours`,
+            potential_reduction: Math.round(Math.max(0.1, currentFootprint * (mode === 'industry' ? 0.22 : 0.18)) * 100) / 100,
+            difficulty: mode === 'industry' ? 'moderate' : (currentFootprint > 8 ? 'easy' : 'moderate') as 'easy' | 'moderate' | 'challenging',
+            cost: mode === 'industry' ? 'medium' : 'free',
+            impact_score: mode === 'industry' ? (currentFootprint > averageFootprint ? 9 : 8) : (currentFootprint > 6 ? 9 : 7),
+            implementation_time: mode === 'industry' ? '2-4 weeks' : '5 minutes'
           },
           {
             category: 'appliances' as const,
-            tip: `Use smart power strips for your appliances to eliminate phantom loads`,
-            potential_reduction: Math.round(Math.max(0.05, currentFootprint * 0.08) * 100) / 100,
-            difficulty: 'easy',
-            cost: 'low',
-            impact_score: 8,
-            implementation_time: '30 minutes'
+            tip: mode === 'industry' 
+              ? `Upgrade to energy-efficient industrial equipment and implement predictive maintenance schedules`
+              : `Use smart power strips for your appliances to eliminate phantom loads`,
+            potential_reduction: Math.round(Math.max(0.05, currentFootprint * (mode === 'industry' ? 0.15 : 0.08)) * 100) / 100,
+            difficulty: mode === 'industry' ? 'challenging' : 'easy',
+            cost: mode === 'industry' ? 'high' : 'low',
+            impact_score: mode === 'industry' ? 9 : 8,
+            implementation_time: mode === 'industry' ? '3-6 months' : '30 minutes'
           },
           {
             category: 'cooling' as const,
@@ -348,19 +492,19 @@ export default function CarbonFootprintAnalysis({
             title: '🌱 Eco Warrior',
             description: 'Reduce carbon footprint by 20% from baseline',
             icon: '🌱',
-            unlocked: currentFootprint <= 4.88, // 20% below 6.1 tons
-            progress: Math.min(100, Math.max(0, ((6.1 - currentFootprint) / 1.22) * 100)), // Progress to 20% reduction
+            unlocked: currentFootprint <= (averageFootprint * 0.8), // 20% below average
+            progress: Math.min(100, Math.max(0, ((averageFootprint - currentFootprint) / (averageFootprint * 0.2)) * 100)), // Progress to 20% reduction
             target: 100,
             points: 500,
-            unlock_date: currentFootprint <= 4.88 ? new Date().toISOString().split('T')[0] : undefined
+            unlock_date: currentFootprint <= (averageFootprint * 0.8) ? new Date().toISOString().split('T')[0] : undefined
           },
           {
             id: 'carbon_neutral',
             title: '⚖️ Carbon Neutral',
-            description: 'Achieve net-zero carbon footprint',
+            description: mode === 'industry' ? 'Achieve carbon neutral operations' : 'Achieve net-zero carbon footprint',
             icon: '⚖️',
-            unlocked: currentFootprint <= 1.0,
-            progress: Math.min(100, Math.max(0, ((6.1 - currentFootprint) / 6.1) * 100)),
+            unlocked: currentFootprint <= (mode === 'industry' ? 2.0 : 1.0), // More realistic for industry
+            progress: Math.min(100, Math.max(0, ((averageFootprint - currentFootprint) / averageFootprint) * 100)),
             target: 100,
             points: 1000
           },
@@ -370,12 +514,12 @@ export default function CarbonFootprintAnalysis({
             description: 'Maintain 85%+ efficiency for 30 days',
             icon: '⚡',
             unlocked: (() => {
-              const ratio = currentFootprint / 6.1;
+              const ratio = currentFootprint / averageFootprint;
               const score = ratio <= 0.5 ? 95 : ratio <= 0.75 ? 85 : ratio <= 1.0 ? 75 : ratio <= 1.25 ? 65 : ratio <= 1.5 ? 50 : Math.max(25, 45 - (ratio * 10));
               return score >= 85;
             })(),
             progress: (() => {
-              const ratio = currentFootprint / 6.1;
+              const ratio = currentFootprint / averageFootprint;
               const score = ratio <= 0.5 ? 95 : ratio <= 0.75 ? 85 : ratio <= 1.0 ? 75 : ratio <= 1.25 ? 65 : ratio <= 1.5 ? 50 : Math.max(25, 45 - (ratio * 10));
               return Math.min(100, Math.max(0, score));
             })(),
@@ -396,18 +540,22 @@ export default function CarbonFootprintAnalysis({
     }
   };
 
-  const getMockCarbonData = (): CarbonData => ({
-    current_footprint: 4.2,
-    daily_co2: 11.5,
-    monthly_co2: 350,
-    yearly_projection: 4200,
-    carbon_intensity: 0.85,
-    sustainability_score: 78,
-    grade: 'B+',
-    peer_comparison: {
-      percentile: 25,
-      average_footprint: 6.1
-    },
+  const getMockCarbonData = (): CarbonData => {
+    const averageFootprint = mode === 'industry' ? 15.2 : 6.1;
+    const mockFootprint = mode === 'industry' ? 12.8 : 4.2;
+    
+    return {
+      current_footprint: mockFootprint,
+      daily_co2: mode === 'industry' ? 35.0 : 11.5,
+      monthly_co2: mode === 'industry' ? 1050 : 350,
+      yearly_projection: mode === 'industry' ? 12800 : 4200,
+      carbon_intensity: mode === 'industry' ? 0.92 : 0.85,
+      sustainability_score: 78,
+      grade: 'B+',
+      peer_comparison: {
+        percentile: 25,
+        average_footprint: averageFootprint
+      },
     real_time_data: {
       current_consumption: 2.8,
       co2_rate: 2.38,
@@ -541,7 +689,8 @@ export default function CarbonFootprintAnalysis({
         points: 750
       }
     ]
-  });
+    };
+  };
 
   const getCarbonGradeColor = (grade: string) => {
     if (grade.startsWith('A')) return 'text-green-600 bg-green-100 border-green-300';
@@ -687,8 +836,9 @@ export default function CarbonFootprintAnalysis({
       </div>
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="trends">Trends</TabsTrigger>
           <TabsTrigger value="marketplace">Offset</TabsTrigger>
           <TabsTrigger value="tips">Reduce</TabsTrigger>
           <TabsTrigger value="achievements">Achievements</TabsTrigger>
@@ -778,7 +928,9 @@ export default function CarbonFootprintAnalysis({
                   <div className="text-lg font-bold text-blue-700">
                     {Math.round(Math.max(100, carbonData.current_footprint * 2300))} miles
                   </div>
-                  <p className="text-xs text-gray-600">Annual driving equivalent</p>
+                  <p className="text-xs text-gray-600">
+                    {mode === 'industry' ? 'Fleet driving equivalent' : 'Annual driving equivalent'}
+                  </p>
                 </div>
                 
                 <div className="text-center p-4 border rounded-lg bg-green-50">
@@ -792,9 +944,14 @@ export default function CarbonFootprintAnalysis({
                 <div className="text-center p-4 border rounded-lg bg-purple-50">
                   <Home className="h-8 w-8 mx-auto mb-2 text-purple-600" />
                   <div className="text-lg font-bold text-purple-700">
-                    {Math.max(0.1, carbonData.current_footprint * 0.45).toFixed(1)} homes
+                    {mode === 'industry' 
+                      ? Math.max(0.1, carbonData.current_footprint * 0.18).toFixed(1)
+                      : Math.max(0.1, carbonData.current_footprint * 0.45).toFixed(1)
+                    } {mode === 'industry' ? 'businesses' : 'homes'}
                   </div>
-                  <p className="text-xs text-gray-600">Average home energy use</p>
+                  <p className="text-xs text-gray-600">
+                    {mode === 'industry' ? 'Similar business energy use' : 'Average home energy use'}
+                  </p>
                 </div>
 
                 <div className="text-center p-4 border rounded-lg bg-orange-50">
@@ -807,6 +964,137 @@ export default function CarbonFootprintAnalysis({
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="trends" className="space-y-6">
+          {carbonData.historical_data && carbonData.historical_data.length > 0 ? (
+            <>
+              {/* Trend Overview Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="border-2">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">30-Day Trend</p>
+                        <div className="flex items-center space-x-2">
+                          {carbonData.trends?.footprint_trend === 'decreasing' ? (
+                            <TrendingDown className="h-5 w-5 text-green-600" />
+                          ) : carbonData.trends?.footprint_trend === 'increasing' ? (
+                            <TrendingUp className="h-5 w-5 text-red-600" />
+                          ) : (
+                            <BarChart3 className="h-5 w-5 text-blue-600" />
+                          )}
+                          <span className={`text-lg font-bold ${
+                            carbonData.trends?.footprint_trend === 'decreasing' ? 'text-green-600' : 
+                            carbonData.trends?.footprint_trend === 'increasing' ? 'text-red-600' : 'text-blue-600'
+                          }`}>
+                            {carbonData.trends?.trend_percentage > 0 ? '+' : ''}{carbonData.trends?.trend_percentage}%
+                          </span>
+                        </div>
+                      </div>
+                      <Badge variant={carbonData.trends?.footprint_trend === 'decreasing' ? 'default' : 'secondary'}>
+                        {carbonData.trends?.footprint_trend === 'decreasing' ? 'Improving' : 
+                         carbonData.trends?.footprint_trend === 'increasing' ? 'Increasing' : 'Stable'}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-2">
+                  <CardContent className="p-6">
+                    <div className="text-center">
+                      <Calendar className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                      <p className="text-sm text-gray-600 mb-1">Best Performance Day</p>
+                      <p className="text-lg font-bold text-green-700">
+                        {carbonData.trends?.best_day ? new Date(carbonData.trends.best_day).toLocaleDateString() : 'N/A'}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-2">
+                  <CardContent className="p-6">
+                    <div className="text-center">
+                      <Target className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                      <p className="text-sm text-gray-600 mb-1">Monthly Average</p>
+                      <p className="text-lg font-bold text-blue-700">
+                        {carbonData.trends?.average_monthly || 0} kg CO₂
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Historical Chart Visualization */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <BarChart3 className="h-5 w-5 text-blue-600" />
+                    <span>Carbon Footprint History</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Track your daily carbon emissions over the past 30 days
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Simple text-based chart for now - can be enhanced with actual charting library */}
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="grid grid-cols-7 gap-2 text-xs">
+                        {carbonData.historical_data.slice(-14).map((point, index) => (
+                          <div key={index} className="text-center">
+                            <div className="mb-1 font-medium">
+                              {new Date(point.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                            </div>
+                            <div 
+                              className="bg-blue-500 rounded-t mx-auto"
+                              style={{
+                                height: `${Math.max(20, (point.daily_co2 / Math.max(...carbonData.historical_data.map(p => p.daily_co2))) * 60)}px`,
+                                width: '20px'
+                              }}
+                            />
+                            <div className="mt-1 text-gray-600">
+                              {point.daily_co2.toFixed(1)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="text-center mt-2 text-xs text-gray-500">
+                        Daily CO₂ Emissions (kg)
+                      </div>
+                    </div>
+
+                    {/* Key Insights */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="font-medium text-blue-900 mb-2">💡 Key Insights</h4>
+                      <ul className="text-sm text-blue-800 space-y-1">
+                        <li>• Your {carbonData.trends?.footprint_trend === 'decreasing' ? 'emissions are decreasing' : carbonData.trends?.footprint_trend === 'increasing' ? 'emissions are increasing' : 'emissions are stable'} compared to last week</li>
+                        <li>• Best performance was on {carbonData.trends?.best_day ? new Date(carbonData.trends.best_day).toLocaleDateString() : 'recent days'}</li>
+                        <li>• Your monthly average is {carbonData.trends?.average_monthly || 0} kg CO₂</li>
+                        {mode === 'industry' ? 
+                          <li>• Consider scheduling high-energy processes during off-peak hours to reduce carbon impact</li> :
+                          <li>• Try to replicate patterns from your best-performing days</li>
+                        }
+                      </ul>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <div className="text-center space-y-4 py-8">
+              <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+                <BarChart3 className="h-8 w-8 text-gray-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Trends Coming Soon</h3>
+                <p className="text-sm text-gray-600">
+                  Upload more data over time to see historical trends, patterns, and insights about your carbon footprint.
+                  We'll need at least 7 days of data to show meaningful trends.
+                </p>
+              </div>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="marketplace" className="space-y-6">
