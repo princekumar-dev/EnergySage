@@ -21,7 +21,10 @@ import {
   CheckCircle,
   Loader2,
   Activity,
-  TestTube2
+  TestTube2,
+  Gauge,
+  Bell,
+  Trash2
 } from 'lucide-react';
 
 import FileUpload from '@/components/FileUpload';
@@ -38,6 +41,8 @@ import TimeBasedAnalysis from '@/components/TimeBasedAnalysis';
 import GridAwareness from '@/components/GridAwareness';
 import GridNotifications from '@/components/GridNotifications';
 import CarbonFootprintAnalysis from '@/components/CarbonFootprintAnalysis';
+import PerformanceMonitor from '@/components/PerformanceMonitor';
+import SmartNotificationSystem from '@/components/SmartNotificationSystem';
 
 import { api, EnergyReading, Prediction, Anomaly, Recommendation, CostData, User, ImportedApplianceData, testAllApiFunctions, SimulationWebSocket } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
@@ -62,6 +67,32 @@ export default function Dashboard() {
   const [lastSimulationData, setLastSimulationData] = useState<EnergyReading | null>(null);
   const [simulationWs, setSimulationWs] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('overview');
+
+  // Clear all data function
+  const clearAllData = () => {
+    if (window.confirm('⚠️ Are you sure you want to clear ALL data? This action cannot be undone.\n\nThis will remove:\n• All uploaded energy data\n• Time series data\n• Predictions and analysis\n• User preferences\n• Simulation data')) {
+      // Clear localStorage
+      localStorage.clear();
+      
+      // Clear sessionStorage
+      sessionStorage.clear();
+      
+      // Reset all state
+      setTimeSeriesData([]);
+      setPredictions([]);
+      setAnomalies([]);
+      setRecommendations([]);
+      setCostData(null);
+      setSimulationRunning(false);
+      setActiveTab('overview');
+      
+      // Show success message
+      alert('✅ All data cleared successfully! The page will now refresh.');
+      
+      // Refresh the page to ensure clean state
+      window.location.reload();
+    }
+  };
 
   useEffect(() => {
     // Load user data
@@ -452,6 +483,17 @@ export default function Dashboard() {
                 <span>Test API</span>
               </Button>
               
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={clearAllData}
+                className="flex items-center space-x-1 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                title="Clear all data and reset application"
+              >
+                <Trash2 className="h-3 w-3" />
+                <span>Clear Data</span>
+              </Button>
+              
               <Button variant="ghost" size="sm">
                 <Settings className="h-4 w-4" />
               </Button>
@@ -560,12 +602,20 @@ export default function Dashboard() {
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-9">
+          <TabsList className="grid w-full grid-cols-11">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="carbon" className="text-green-700">
               <Leaf className="h-4 w-4 mr-1" />
               Carbon
+            </TabsTrigger>
+            <TabsTrigger value="performance">
+              <Activity className="h-4 w-4 mr-1" />
+              Performance
+            </TabsTrigger>
+            <TabsTrigger value="notifications">
+              <Bell className="h-4 w-4 mr-1" />
+              Alerts
             </TabsTrigger>
             <TabsTrigger value="timebased">Time Analysis</TabsTrigger>
             <TabsTrigger value="gridaware">Grid Alerts</TabsTrigger>
@@ -629,6 +679,24 @@ export default function Dashboard() {
               realTimeCostData={realTimeCostData}
               timeSeriesData={timeSeriesData}
               hasUploadedData={timeSeriesData.length > 0 || simulationRunning}
+              mode={mode}
+            />
+          </TabsContent>
+
+          {/* Performance Monitor */}
+          <TabsContent value="performance" className="space-y-6">
+            <PerformanceMonitor 
+              isSimulationRunning={simulationRunning}
+              dataPointsCount={timeSeriesData.length}
+            />
+          </TabsContent>
+
+          {/* Smart Notifications */}
+          <TabsContent value="notifications" className="space-y-6">
+            <SmartNotificationSystem 
+              currentUsage={totalConsumption}
+              monthlyBudget={200}
+              isSimulationRunning={simulationRunning}
             />
           </TabsContent>
 
