@@ -1,0 +1,31 @@
+name,type,brand,model,wattage,age_years,efficiency_rating,usage_hours_per_day,room_location
+Samsung Smart Fridge,Refrigerator,Samsung,RF28R7551SR,350,1,A+++,24,Kitchen
+LG Front Load Washer,Washer,LG,WM9000HVA,450,2,A++,2,Laundry Room
+Carrier Central AC,HVAC,Carrier,24ACC636A003,3500,8,C,12,Central
+Bosch Dishwasher Pro,Dishwasher,Bosch,SHPM88Z75N,1600,1,A+++,1.5,Kitchen
+Whirlpool Electric Range,Oven,Whirlpool,WFE515S0ES,3000,5,B+,2,Kitchen
+Panasonic Inverter Microwave,Microwave,Panasonic,NN-SN966S,1100,1,A,1,Kitchen
+Sony 65" OLED TV,Electronics,Sony,XBR65A90J,180,1,A+,7,Living Room
+MacBook Pro 16,Electronics,Apple,MacBook Pro,100,2,A++,10,Home Office
+Gaming PC Custom Build,Electronics,Custom,RTX 4080 Build,650,1,A,6,Home Office
+Rheem Tankless Water Heater,Water Heater,Rheem,RTEX-24,24000,3,A+,2,Utility Room
+Maytag Gas Dryer,Dryer,Maytag,MGD4500MW,300,4,B,1.5,Laundry Room
+Dyson Ceiling Fan,Fan,Dyson,Pure Cool,56,1,A++,16,Bedroom
+Dyson Hot+Cool Heater,Heater,Dyson,HP04,1500,2,A+,6,Living Room
+Breville Espresso Machine,Small Appliance,Breville,Barista Express,1600,3,B+,1,Kitchen
+KitchenAid Stand Mixer,Small Appliance,KitchenAid,Professional 600,575,5,A,0.5,Kitchen
+Roomba Robot Vacuum,Small Appliance,iRobot,Roomba i7+,33,2,A+++,2,Various
+Xbox Series X,Electronics,Microsoft,Xbox Series X,153,1,A+,5,Living Room
+ASUS Gaming Router,Electronics,ASUS,AX6000,45,1,A,24,Home Office
+Ecobee Smart Thermostat,HVAC,Ecobee,SmartThermostat,8,1,A+++,24,Hallway
+Philips Smart Bulbs Set,Lighting,Philips,Hue Color,12,2,A++,10,Various Rooms
+Instant Pot Pressure Cooker,Small Appliance,Instant Pot,Duo 8Qt,1200,2,A,0.8,Kitchen
+Ninja Blender,Small Appliance,Ninja,Professional BL610,1100,3,B+,0.3,Kitchen
+Air Purifier,Small Appliance,Coway,AP-1512HH,77,1,A+,20,Bedroom
+Dehumidifier,HVAC,Frigidaire,FFAD7033R1,700,3,B,8,Basement
+Space Heater Bedroom,Heater,Lasko,Ceramic Tower,1500,2,B+,4,Bedroom
+Old CRT Monitor,Electronics,Dell,Legacy,150,15,D,8,Storage
+Broken Toaster,Small Appliance,Black&Decker,TR1278B,1200,8,F,0,Storage
+High Efficiency Washer,Washer,Speed Queen,FF7,540,1,A+++,1.5,Laundry Room
+Wine Cooler,Refrigerator,NewAir,AWR-290DB,194,4,B,24,Dining Room
+Garage Door Opener,Motor,Chamberlain,B1381,600,7,C,0.2,Garage
